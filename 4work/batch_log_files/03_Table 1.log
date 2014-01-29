@@ -1,0 +1,186 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   11.2   Copyright 1985-2009 StataCorp LP
+  Statistics/Data Analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        http://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Single-user 4-core Stata perpetual license:
+       Serial number:  50110563506
+         Licensed to:  Stephen O'Connell
+                       City University of New York
+
+Notes:
+      1.  (/m# option or -set memory-) 2048.00 MB allocated to data
+      2.  (/v# option or -set maxvar-) 5000 maximum variables
+      3.  Stata running in batch mode
+
+. do "..\..\2progs\03_Table 1.do" 
+
+. ************************************************************************
+. ***************Ghani - Kerr - O'Connell                  ***************
+> ********
+. ***************Political Reservations and Women's Entrepreneuship*******
+. ***************Journal of Development Economics, 2014 ******************
+. ***************Replication Backup                                *******
+> ****************
+. ************************************************************************
+. clear
+
+. clear matrix
+
+. clear mata
+
+. cap log close
+
+. 
+. global root "C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup"
+
+. include "$root/2progs/00_Set_paths.do"
+
+. version 11.0
+
+. dis "$root"
+C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup
+
+. assert "$root" !="" //assert root capture worked for user
+
+. global data "$root/1data/"
+
+. global do "$root/2progs/"
+
+. global figures "$root/3figures/"
+
+. global work "$root/4work/"
+
+. global intdata "$root/5intdata/"
+
+. global finaldata "$root/6finaldata/"
+
+. global date=c(current_date)
+
+. global time=subinstr(c(current_time),":","",.)
+
+. cd "$work" //default directory to put files, although all outputs should
+>  be directed via a global macro
+C:\OpenCode\GKO_Reservations_JDE2014_ReplBackup\4work
+
+. set seed 99
+
+. set mem 2g, perm
+
+Current memory allocation
+
+                    current                                 memory usage
+    settable          value     description                 (1M = 1024k)
+    --------------------------------------------------------------------
+    set maxvar         5000     max. variables allowed           1.947M
+    set memory         2048M    max. data space              2,048.000M
+    set matsize         800     max. RHS vars in models          4.950M
+                                                            -----------
+                                                             2,054.897M
+(set memory preference recorded)
+
+. 
+. 
+. ************************************************************************
+. ************************************************************************
+. use "$intdata/ASINSS_Summary.dta", clear
+
+. 
+. rename totalemployees totalpersonsengaged
+
+. tempfile master
+
+. save `master'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000001.tmp saved
+
+. 
+. ***OUTPUT TABLES OF SUMMARY STATISTICS - BY STATE , M/F, and YEAR
+. foreach var of varlist plants  totalpersonsengaged totalunpaidemp totalo
+> utput Femployees Memployees {
+  2. replace `var'=`var'*multiplier
+  3. }
+(510103 real changes made)
+(510083 real changes made)
+(187533 real changes made)
+(510110 real changes made)
+(226155 real changes made)
+(428214 real changes made)
+
+. tempfile temp
+
+. save `temp'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000002.tmp saved
+
+. 
+. g organization2="All others"
+
+. replace organization2 =organization if organization =="F_Individual Prop
+> rietorship"| organization =="M_Individual Proprietorship"
+organization2 was str10 now str27
+(440514 real changes made)
+
+. tab organization
+
+                           organization |      Freq.     Percent        Cu
+> m.
+----------------------------------------+---------------------------------
+> --
+                                      . |         45        0.01        0.
+> 01
+                                      0 |         10        0.00        0.
+> 01
+                   Co-Operative Society |      2,399        0.43        0.
+> 44
+            F_Individual Proprietorship |     86,261       15.34       15.
+> 77
+   Government departmental  enterprises |        957        0.17       15.
+> 94
+                              Handlooms |         29        0.01       15.
+> 95
+              Individual Proprietorship |     18,829        3.35       19.
+> 30
+                    Joint  Family (HUF) |      2,959        0.53       19.
+> 82
+  Khadi & Village Industries Commission |        103        0.02       19.
+> 84
+            M_Individual Proprietorship |    354,253       62.98       82.
+> 82
+Others  (including  trusts, wakf,  boar |      1,734        0.31       83.
+> 13
+                            Partnership |     48,719        8.66       91.
+> 79
+               Private Limited  Company |        795        0.14       91.
+> 93
+             Private Limited  Company   |     26,017        4.63       96.
+> 56
+               Public  Limited  Company |     18,410        3.27       99.
+> 83
+Public Corporation  by  special Act of  |        957        0.17      100.
+> 00
+----------------------------------------+---------------------------------
+> --
+                                  Total |    562,477      100.00
+
+. collapse (sum) plants  totalpersonsengaged totaloutput Femployees Memplo
+> yees, by(survey year organization2 location)
+
+. ds, has(type numeric)
+year          totalperso~d  Femployees
+plants        totaloutput   Memployees
+
+. format %18.0g `r(varlist)'
+
+. outsheet using "$figures/Table1_input.csv", comma replace
+
+. 
+. erase "$intdata/ASINSS_Summary.dta"
+
+. 
+. 
+end of do-file

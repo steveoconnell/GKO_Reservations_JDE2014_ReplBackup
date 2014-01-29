@@ -1,0 +1,292 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   11.2   Copyright 1985-2009 StataCorp LP
+  Statistics/Data Analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        http://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Single-user 4-core Stata perpetual license:
+       Serial number:  50110563506
+         Licensed to:  Stephen O'Connell
+                       City University of New York
+
+Notes:
+      1.  (/m# option or -set memory-) 2048.00 MB allocated to data
+      2.  (/v# option or -set maxvar-) 5000 maximum variables
+      3.  Stata running in batch mode
+
+. do "..\..\2progs\asi_build\ASI Append 94 00 05.do" 
+
+. ************************************************************************
+. ***************Ghani - Kerr - O'Connell                  ***************
+> ********
+. ***************Political Reservations and Women's Entrepreneuship*******
+. ***************Journal of Development Economics, 2014 ******************
+. ***************Replication Backup                                *******
+> ****************
+. ************************************************************************
+. ***Note that this file is for a general-purpose data read-in & clean, th
+> us
+. ***operates on far more variables than may be necessary given final use.
+. 
+. clear
+
+. clear matrix
+
+. clear mata
+
+. cap log close
+
+. 
+. global root "C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup"
+
+. include "$root/2progs/00_Set_paths.do"
+
+. version 11.0
+
+. dis "$root"
+C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup
+
+. assert "$root" !="" //assert root capture worked for user
+
+. global data "$root/1data/"
+
+. global do "$root/2progs/"
+
+. global figures "$root/3figures/"
+
+. global work "$root/4work/"
+
+. global intdata "$root/5intdata/"
+
+. global finaldata "$root/6finaldata/"
+
+. global date=c(current_date)
+
+. global time=subinstr(c(current_time),":","",.)
+
+. cd "$work" //default directory to put files, although all outputs should
+>  be directed via a global macro
+C:\OpenCode\GKO_Reservations_JDE2014_ReplBackup\4work
+
+. set seed 99
+
+. set mem 2g, perm
+
+Current memory allocation
+
+                    current                                 memory usage
+    settable          value     description                 (1M = 1024k)
+    --------------------------------------------------------------------
+    set maxvar         5000     max. variables allowed           1.947M
+    set memory         2048M    max. data space              2,048.000M
+    set matsize         800     max. RHS vars in models          4.950M
+                                                            -----------
+                                                             2,054.897M
+(set memory preference recorded)
+
+. 
+. 
+. ************************************************************************
+. ************************************************************************
+. ****APPEND SEPARATE YEARS OF DATA TOGETHER
+. use "$intdata/ASI0001_clean", clear
+
+. append using "$intdata/ASI0506_clean"
+
+. egen totallabourcosttotal=rowtotal(wagesandsalariestotalEEs bonustotalEE
+> s  contributiontopftotalEEs welfareexpensetotalEEs)
+
+. destring psl, replace
+psl has all characters numeric; replaced as long
+
+. append using "$intdata/ASI9495_clean.dta"
+psl was long now double
+uniqid was str5 now str12
+valuecoal was float now double
+valuetotalfuelelec was float now double
+valuetotalrawmaterials was float now double
+valuetotalimportedmaterials was float now double
+
+. 
+. # delim ;
+delimiter now ;
+. keep
+> uniqid
+> yearofinitialprod
+> state
+> district
+> ruralurban
+> industry*
+> noofunits
+> status
+> noofmanufacturingdays
+> totalnoofworkingdays
+> totalnoofshifts
+> lengthofshifts
+> monthsofoperation 
+> typeoforganisation
+> typeofownership
+> year
+> multiplier
+> 
+> closeoutstandingloan
+> interest
+> 
+> valueofelectricitysold
+> valueelectricitypurchased
+> electricitygenerated
+> electricitypurchased
+> electricityconsumed
+> 
+> totalrent
+> 
+> _avgmen
+> _avgwomen
+> _avgmen _avgwomen _avgchildren _avgthrucontr _avgsupervstaff _avgotherem
+> ployees _avggproprietors _avgtotalEE
+> 
+> _avgunpaidEE
+> 
+> wagesandsalariestotalEEs
+> 
+> 
+> totallabourcosttotal
+> closingnetland
+> closingnetbuilding
+> itemwiseexactvalue
+> grosssalevalue
+> valuetotalrawmaterials
+> totallabourcosttotal
+> closingnettotalFA
+> closingnettotalFA openingnettotalFA
+> valuetotalimportedmaterials
+> ;
+
+. # delim ;
+delimiter now ;
+.                         rename yearofinitialprod startyear      ;
+
+.                                 rename noofunits plants ;
+
+.         rename noofmanufacturingdays manufdays  ;
+
+. rename totalnoofworkingdays workingdays ;
+
+. rename totalnoofshifts noofshifts       ;
+
+. rename lengthofshifts lengthshifts      ;
+
+. rename typeoforganisation organization  ;
+
+. rename typeofownership ownership        ;
+
+. rename  monthsofoperation monthsops;
+
+.                         rename closeoutstandingloan loanamount  ;
+
+. rename interest interestamount  ;
+
+.         *rename electricitypurchased electricityexpense ;
+. *rename electricitygenerated ownelectricitygenerated    ;
+.         rename totalrent totalFArent    ;
+
+.         rename _avgmen Memployees       ;
+
+. rename _avgwomen Femployees     ;
+
+. rename _avgtotalEE totalemployees       ;
+
+. rename _avgunpaidEE TOTOTHEE ;
+
+. rename wagesandsalariestotalEEs Totalemployeeswagebill  ;
+
+. rename totallabourcosttotal totalemployeestotalLcost    ;
+
+.         rename itemwiseexactvalue totaloutput   ;
+
+. rename grosssalevalue totalsales        ;
+
+. rename valuetotalrawmaterials totalrawmaterials ;
+
+. g fixedcapitalformation= closingnettotalFA-openingnettotalFA    ;
+(23804 missing values generated)
+
+. rename closingnettotalFA totalfixedassets       ;
+
+. rename valuetotalimportedmaterials totalimports ;
+
+. replace industrycode5=substr("00000"+industrycode5,length("00000"+indust
+> rycode5)-4,5);
+(59703 real changes made)
+
+. replace industrycode=substr(industrycode5,1,4) if industrycode=="9999" &
+>  year>=2000 ;
+(98400 real changes made)
+
+. *drop industrycode5;
+.  #delim cr
+delimiter now cr
+. ***figure out open-closed---& drop closed
+. destring ruralurban, replace
+ruralurban has all characters numeric; replaced as byte
+(26 missing values generated)
+
+. replace ruralurban=2 if ruralurban==3
+(6487 real changes made)
+
+. replace ruralurban=ruralurban-1
+(156326 real changes made)
+
+. tab ruralurban
+
+ ruralurban |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         -1 |         45        0.03        0.03
+          0 |     56,483       36.13       36.16
+          1 |     99,778       63.83       99.99
+          3 |          5        0.00       99.99
+          4 |          6        0.00       99.99
+          5 |          3        0.00      100.00
+          6 |          3        0.00      100.00
+          8 |          3        0.00      100.00
+------------+-----------------------------------
+      Total |    156,326      100.00
+
+. replace ruralurban=. if ruralurban<0 | ruralurban>2
+(65 real changes made, 65 to missing)
+
+. 
+. keep if (status==0 & (year==1989 | year==1994)) | (status==1 & (year==20
+> 00 | year==2005))
+(27495 observations deleted)
+
+. 
+. 
+. drop  openingnettotalFA _avgchildren _avgotheremployees _avgsupervstaff 
+> _avgthrucontr status manufdays workingdays noofshifts lengthshifts _avgg
+> proprietors 
+
+. 
+. g survey="ASI"
+
+. 
+. save "$intdata/ASI_Allyears_Clean.dta", replace
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASI_
+> Allyears_Clean.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASI_Allyear
+> s_Clean.dta saved
+
+. 
+. erase "$intdata/ASI9495_clean.dta"
+
+. erase "$intdata/ASI0001_clean.dta"
+
+. erase "$intdata/ASI0506_clean.dta"
+
+. 
+end of do-file

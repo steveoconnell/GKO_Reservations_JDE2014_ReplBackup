@@ -1,0 +1,36 @@
+State,_1,_2,_3,_expected
+Andhra Pradesh,1996,2001,2006,1992
+Arunachal Pradesh,2003,2008,,1995
+Assam,2001,2007,,1996
+Bihar,2001,2006,,1994
+Jharkhand,2001,2006,,
+Chhattisgarh,2005,,,
+Goa,2000,2005,,1996
+Gujarat,1995,2000,2007,1995
+Haryana,1995,2000,2005,1995
+Himachal Pradesh,1995,2000,2005,1996
+Karnataka,1995,2000,2005,1993
+Kerala,1995,2000,2005,1995
+Madhya Pradesh,1994,1999,2004,1993
+Maharashtra,1997,2002,2007,1997
+Manipur,1997,2002,2007,1997
+Orissa,1997,2002,2007,1997
+Punjab,1998,2003,,1998
+Rajasthan,1995,2000,2005,1995
+Sikkim,1997,2002,2007,1997
+Tamil Nadu,1996,2001,2006,1996
+Tripura,1994,1999,2004,
+Uttar Pradesh,1995,2000,2005,1995
+Uttaranchal,1996,2003,,
+West Bengal,1993,1998,2003,1993
+A & N Islands,1995,,,
+Chandigarh,1998,,,1998
+Dadra & Nagar Haveli,1995,,,
+Daman & Diu,1995,,,
+Delhi,2012,,,
+Jammu & Kashmir,2012,,,
+Lakshadweep,1997,,,
+Meghalaya,2012,,,
+Mizoram,2012,,,
+Nagaland,2012,,,
+Pondicherry,2012,,,

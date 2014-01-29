@@ -1,0 +1,1749 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   11.2   Copyright 1985-2009 StataCorp LP
+  Statistics/Data Analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        http://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Single-user 4-core Stata perpetual license:
+       Serial number:  50110563506
+         Licensed to:  Stephen O'Connell
+                       City University of New York
+
+Notes:
+      1.  (/m# option or -set memory-) 2048.00 MB allocated to data
+      2.  (/v# option or -set maxvar-) 5000 maximum variables
+      3.  Stata running in batch mode
+
+. do ..\..\2progs\asi_build\ASI_9495_Import.do 
+
+. ************************************************************************
+. ***************Ghani - Kerr - O'Connell                  ***************
+> ********
+. ***************Political Reservations and Women's Entrepreneuship*******
+. ***************Journal of Development Economics, 2014 ******************
+. ***************Replication Backup                                *******
+> ****************
+. ************************************************************************
+. ***Note that this file is for a general-purpose data read-in & clean, th
+> us
+. ***operates on far more variables than may be necessary given final use.
+. 
+. clear
+
+. clear matrix
+
+. clear mata
+
+. cap log close
+
+. 
+. global root "C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup"
+
+. include "$root/2progs/00_Set_paths.do"
+
+. version 11.0
+
+. dis "$root"
+C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup
+
+. assert "$root" !="" //assert root capture worked for user
+
+. global data "$root/1data/"
+
+. global do "$root/2progs/"
+
+. global figures "$root/3figures/"
+
+. global work "$root/4work/"
+
+. global intdata "$root/5intdata/"
+
+. global finaldata "$root/6finaldata/"
+
+. global date=c(current_date)
+
+. global time=subinstr(c(current_time),":","",.)
+
+. cd "$work" //default directory to put files, although all outputs should
+>  be directed via a global macro
+C:\OpenCode\GKO_Reservations_JDE2014_ReplBackup\4work
+
+. set seed 99
+
+. set mem 2g, perm
+
+Current memory allocation
+
+                    current                                 memory usage
+    settable          value     description                 (1M = 1024k)
+    --------------------------------------------------------------------
+    set maxvar         5000     max. variables allowed           1.947M
+    set memory         2048M    max. data space              2,048.000M
+    set matsize         800     max. RHS vars in models          4.950M
+                                                            -----------
+                                                             2,054.897M
+(set memory preference recorded)
+
+. 
+. 
+. ************************************************************************
+. ************************************************************************
+. global input "$data/ASI/ASI1994_95/"    
+
+. #delim ;        
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> fodrsl  19-23
+> permanentslno   24-28
+> noofunits       29-31
+> str statedist   32-37
+> str fodregioncode       38-42
+> ruralurban      43
+> backwardareacode        44
+> yearofinitialprod       45-48
+> typeoforganisation      49
+> typeofownership 50
+> typeofmanagement        51
+> whetherancillaryunit    52
+> whetherregistered       53
+> accountingyearclosing   54-59
+> monthsofoperation       60-61
+> typeofpowerused 62
+> openclosedcode  63
+> noofrecordsblk4 64-65
+> noofrecordsblk5 66
+> noofrecordsblk7 67
+> noofrecordsblk8 68
+> noofrecordsblk9 69
+> noofrecordsblk10        70
+> noofrecordsblk11        71
+> noofrecordsblk12        72
+> noofrecordsblk13        73-74
+> noofrecordsblk13a       75-76
+> noofrecordsblk13b       77-78
+> noofrecordsblk14        79-80
+> noofrecordsblk14a       81
+> noofrecordstotal        82-84
+> filler  85-123
+> multiplier      124-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. drop filler noofrec*    ;
+
+. keep if recordcategory==11      ;
+(1616827 observations deleted)
+
+.         replace statedist=substr(statedist,1,4);
+(57926 real changes made)
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. save "$work/ASI9495block1", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block1.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block1.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13  -    15
+> subrecordcode    16 -   18 
+> openinggross     19 -  29 
+> addbyreval      30-40
+> addnew  41-51
+> deduction       52-62
+> deprecbeg       63-73
+> deprecduring    74-84
+> soldordiscarded 85-95
+> openingnet      96-106
+> closingnet      107-117
+> filler  118-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==40      ;
+(1281088 observations deleted)
+
+. drop filler recordcategory      ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. tostring subrecordcode, replace ;
+subrecordcode was float now str2
+
+. replace subrecordcode="land" if subrecordcode=="1"      ;
+subrecordcode was str2 now str4
+(33816 real changes made)
+
+. replace subrecordcode="devland" if subrecordcode=="2"   ;
+subrecordcode was str4 now str7
+(10174 real changes made)
+
+. replace subrecordcode="building" if subrecordcode=="3"  ;
+subrecordcode was str7 now str8
+(45019 real changes made)
+
+. replace subrecordcode="plant_mach" if subrecordcode=="4"        ;
+subrecordcode was str8 now str10
+(53881 real changes made)
+
+. replace subrecordcode="furn_fittgs" if subrecordcode=="5"       ;
+subrecordcode was str10 now str11
+(48047 real changes made)
+
+. replace subrecordcode="transportequip" if subrecordcode=="6"    ;
+subrecordcode was str11 now str14
+(39192 real changes made)
+
+. replace subrecordcode="otherFA" if subrecordcode=="7"   ;
+(38023 real changes made)
+
+. replace subrecordcode="totalcapitalwip" if subrecordcode=="9"   ;
+subrecordcode was str14 now str15
+(3420 real changes made)
+
+. drop if subrecordcode=="10"     ;
+(3073 observations deleted)
+
+. drop if subrecordcode=="11"     ;
+(1731 observations deleted)
+
+. drop if subrecordcode=="12"     ;
+(5640 observations deleted)
+
+. drop if subrecordcode=="8"      ;
+(36 observations deleted)
+
+. drop if subrecordcode=="14"     ;
+(55890 observations deleted)
+
+. replace subrecordcode="totalFA" if subrecordcode=="13"  ;
+(55723 real changes made)
+
+. reshape wide openinggross-closingnet, i(industry-scheme uniqid) j(subrec
+> ordcode) string ;
+(note: j = building devland furn_fittgs land otherFA plant_mach totalFA to
+> talcapitalwip transportequip)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   327295   ->   55889
+Number of variables                  15   ->      86
+j variable (9 values)     subrecordcode   ->   (dropped)
+xij variables:
+                           openinggross   ->   openinggrossbuilding openin
+> ggrossdevland ... openinggrosstransportequip
+                             addbyreval   ->   addbyrevalbuilding addbyrev
+> aldevland ... addbyrevaltransportequip
+                                 addnew   ->   addnewbuilding addnewdevlan
+> d ... addnewtransportequip
+                              deduction   ->   deductionbuilding deduction
+> devland ... deductiontransportequip
+                              deprecbeg   ->   deprecbegbuilding deprecbeg
+> devland ... deprecbegtransportequip
+                           deprecduring   ->   deprecduringbuilding deprec
+> duringdevland ... deprecduringtransportequip
+                        soldordiscarded   ->   soldordiscardedbuilding sol
+> dordiscardeddevland ... soldordiscardedtransportequip
+                             openingnet   ->   openingnetbuilding openingn
+> etdevland ... openingnettransportequip
+                             closingnet   ->   closingnetbuilding closingn
+> etdevland ... closingnettransportequip
+--------------------------------------------------------------------------
+> ---
+
+. save "$work/ASI9495block2", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block2.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block2.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> subrecordcode   16-18
+> pmundepreciatedopening  19-29
+> pmleasedinopening       30-40
+> pmleasedoutopening      41-51
+> pmtotalopening  52-62
+> pmundepreciatedclosing  63-73
+> pmleasedinclosing       74-84
+> pmleasedoutclosing      85-95
+> pmtotalclosing  96-106
+> filler  107-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==40      ;
+(1281088 observations deleted)
+
+. keep if subrecordcode==14       ;
+(337775 observations deleted)
+
+. drop filler recordcategory subrecordcode        ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. save "$work/ASI9495block3", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block3.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block3.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> rawmaterials    19-29
+> fuellube        30-40
+> sparesothers    41-51
+> semifinished    52-62
+> finishedgoods   63-73
+> totalinventory  74-84
+> filler  85-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==51 | recordcategory==53 ;
+(1577028 observations deleted)
+
+. drop filler linkcode    ;
+
+. tostring recordcategory, replace        ;
+recordcategory was float now str2
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. replace recordcategory="open" if recordcategory=="51"   ;
+recordcategory was str2 now str4
+(48586 real changes made)
+
+. replace recordcategory="close" if recordcategory=="53"  ;
+recordcategory was str4 now str5
+(49139 real changes made)
+
+. reshape wide rawmaterials-totalinventory, i(industry-scheme uniqid) j(re
+> cordcategory) string    ;
+(note: j = close open)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                    97725   ->   49903
+Number of variables                  12   ->      17
+j variable (2 values)    recordcategory   ->   (dropped)
+xij variables:
+                           rawmaterials   ->   rawmaterialsclose rawmateri
+> alsopen
+                               fuellube   ->   fuellubeclose fuellubeopen
+                           sparesothers   ->   sparesothersclose sparesoth
+> ersopen
+                           semifinished   ->   semifinishedclose semifinis
+> hedopen
+                          finishedgoods   ->   finishedgoodsclose finished
+> goodsopen
+                         totalinventory   ->   totalinventoryclose totalin
+> ventoryopen
+--------------------------------------------------------------------------
+> ---
+
+. save "$work/ASI9495block4", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block4.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block4.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> cash    19-29
+> sundrydebtors   30-40
+> othercurrentasts        41-51
+> sundrycreditors 52-62
+> overdraftsetc   63-73
+> othercurrentliab        74-84
+> workingcapital  85-95
+> outstandingloan 96-106
+> filler  107-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==52 | recordcategory==54 ;
+(1563911 observations deleted)
+
+. drop filler linkcode    ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. tostring recordcategory, replace        ;
+recordcategory was float now str2
+
+. replace recordcategory="open" if recordcategory=="52"   ;
+recordcategory was str2 now str4
+(55127 real changes made)
+
+. replace recordcategory="close" if recordcategory=="54"  ;
+recordcategory was str4 now str5
+(55715 real changes made)
+
+. reshape wide cash-outstandingloan, i(industry-scheme uniqid) j(recordcat
+> egory) string   ;
+(note: j = close open)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   110842   ->   55884
+Number of variables                  14   ->      21
+j variable (2 values)    recordcategory   ->   (dropped)
+xij variables:
+                                   cash   ->   cashclose cashopen
+                          sundrydebtors   ->   sundrydebtorsclose sundryde
+> btorsopen
+                       othercurrentasts   ->   othercurrentastsclose other
+> currentastsopen
+                        sundrycreditors   ->   sundrycreditorsclose sundry
+> creditorsopen
+                          overdraftsetc   ->   overdraftsetcclose overdraf
+> tsetcopen
+                       othercurrentliab   ->   othercurrentliabclose other
+> currentliabopen
+                         workingcapital   ->   workingcapitalclose working
+> capitalopen
+                        outstandingloan   ->   outstandingloanclose outsta
+> ndingloanopen
+--------------------------------------------------------------------------
+> ---
+
+. save "$work/ASI9495block5", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block5.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block5.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> men     19-29
+> women   30-40
+> children        41-51
+> thrucontr       52-62
+> supervstaff     63-73
+> otheremployees  74-84
+> totalEEs        85-95
+> filler  96-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==71 | recordcategory==72 | recordcategory==73    
+> ;
+(1555697 observations deleted)
+
+. drop filler     ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. tostring recordcategory, replace        ;
+recordcategory was float now str2
+
+. replace recordcategory="manufdays" if recordcategory=="71"      ;
+recordcategory was str2 now str9
+(53932 real changes made)
+
+. replace recordcategory="nonmanufdays" if recordcategory=="72"   ;
+recordcategory was str9 now str12
+(9983 real changes made)
+
+. replace recordcategory="totaldays" if recordcategory=="73"      ;
+(55141 real changes made)
+
+. reshape wide men-totalEEs, i(industry-scheme uniqid) j(recordcategory) s
+> tring   ;
+(note: j = manufdays nonmanufdays totaldays)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   119056   ->   55171
+Number of variables                  14   ->      27
+j variable (3 values)    recordcategory   ->   (dropped)
+xij variables:
+                                    men   ->   menmanufdays mennonmanufday
+> s mentotaldays
+                                  women   ->   womenmanufdays womennonmanu
+> fdays womentotaldays
+                               children   ->   childrenmanufdays childrenn
+> onmanufdays childrentotaldays
+                              thrucontr   ->   thrucontrmanufdays thrucont
+> rnonmanufdays thrucontrtotaldays
+                            supervstaff   ->   supervstaffmanufdays superv
+> staffnonmanufdays supervstafftotaldays
+                         otheremployees   ->   otheremployeesmanufdays oth
+> eremployeesnonmanufdays otheremployeestotaldays
+                               totalEEs   ->   totalEEsmanufdays totalEEsn
+> onmanufdays totalEEstotaldays
+--------------------------------------------------------------------------
+> ---
+
+. save "$work/ASI9495block6", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block6.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block6.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> men_avg 19-25
+> women_avg       26-32
+> children_avg    33-39
+> thrucontr_avg   40-46
+> supervstaff_avg 47-53
+> otheremployees_avg      54-60
+> gproprietors_avg        61-67
+> unpaidEE_avg    68-74
+> ifcoop_avg      75-81
+> totalEE_avg     82-88
+> noofmanufacturingdays   89-95
+> totalnoofworkingdays    96-102
+> totalnoofshifts 103-109
+> lengthofshifts  110-116
+> filler  117-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==74      ;
+(1618864 observations deleted)
+
+. drop filler recordcategory      ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. egen check=rowtotal( men_avg women_avg children_avg thrucontr_avg superv
+> staff_avg otheremployees_avg gproprietors_avg unpaidEE_avg ifcoop_avg) ;
+
+. replace totalEE_avg = check if check!=totalEE_avg;
+(2448 real changes made)
+
+. drop check;
+
+. save "$work/ASI9495block7", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block7.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block7.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> wagesandsalariesEEs     19-28
+> bonusEEs        29-38
+> contributiontopfEEs     39-48
+> welfareexpenseEEs       49-58
+> totallabourcostEEs      59-68
+> wagessupervisory        69-78
+> bonussupervisory        79-88
+> contribsupervisory      89-98
+> welfareexpsupervisory   99-108
+> totallabourcostsupervisory      109-118
+> filler  119-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==81      ;
+(1620293 observations deleted)
+
+. drop filler recordcategory      ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. save "$work/ASI9495block8", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block8.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block8.
+> dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> wagessalariesothers     19-28
+> bonus0thers     29-38
+> contributiontopfothers  39-48
+> welfareexpenseothers    49-58
+> totallabourcostothers   59-68
+> wagessalariestotal      69-78
+> bonustotal      79-88
+> contributiontopftotal   89-98
+> welfareexpensestotal    99-108
+> totallabourcosttotal    109-118
+> filler  119-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==82      ;
+(1619540 observations deleted)
+
+. drop filler recordcategory      ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. save "$work/ASI9495block9", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block9.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block9.
+> dta saved
+
+. #delim ;
+delimiter now ;
+.         clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> itemcode1       19-22
+> qty1    23-33
+> value1  34-44
+> itemcode2       45-48
+> qty2    49-59
+> value2  60-70
+> itemcode3       71-74
+> qty3    75-85
+> value3  86-96
+> itemcode4       97-100
+> qty4    101-111
+> value4  112-122
+> filler  123-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==91      ;
+(1585162 observations deleted)
+
+. drop filler     ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. tempfile master ;
+
+. save `master'   ;
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000i.tmp saved
+
+.         forval i=1/4 {  ;
+  2. use `master', clear     ;
+  3. keep   industrycode- recordcategory uniqid itemcode`i' value`i' ;
+  4. rename itemcode itemcode        ;
+  5. rename value value      ;
+  6. tempfile temp`i'        ;
+  7. save `temp`i''  ;
+  8. }       ;
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000j.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000k.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000l.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000m.tmp saved
+
+.         use `temp1', clear      ;
+
+. append using `temp2'    ;
+
+. append using `temp3'    ;
+
+. append using `temp4'    ;
+
+.         drop if itemcode==0     ;
+(86370 observations deleted)
+
+. keep if itemcode <=16 | itemcode==9999  ;
+(0 observations deleted)
+
+.         tostring itemcode, replace      ;
+itemcode was float now str4
+
+. replace itemcode="coal" if recordcategory==91 & itemcode=="1"   ;
+(7505 real changes made)
+
+. replace itemcode="lignite" if recordcategory==91 & itemcode=="2"        
+> ;
+itemcode was str4 now str7
+(717 real changes made)
+
+. replace itemcode="coalgas" if recordcategory==91 & itemcode=="3"        
+> ;
+(81 real changes made)
+
+. replace itemcode="liqpetgas" if recordcategory==91 & itemcode=="4"      
+> ;
+itemcode was str7 now str9
+(1300 real changes made)
+
+. replace itemcode="natgas" if recordcategory==91 & itemcode=="5" ;
+(845 real changes made)
+
+. replace itemcode="petrol" if recordcategory==91 & itemcode=="6" ;
+(33013 real changes made)
+
+. replace itemcode="diesel" if recordcategory==91 & itemcode=="7" ;
+(26978 real changes made)
+
+. replace itemcode="furnaceoil" if recordcategory==91 & itemcode=="8"     
+> ;
+itemcode was str9 now str10
+(4521 real changes made)
+
+. replace itemcode="otherfueloil" if recordcategory==91 & itemcode=="9"   
+> ;
+itemcode was str10 now str12
+(3327 real changes made)
+
+. replace itemcode="wood" if recordcategory==91 & itemcode=="10"  ;
+(5393 real changes made)
+
+. replace itemcode="biomass" if recordcategory==91 & itemcode=="11"       
+> ;
+(373 real changes made)
+
+. replace itemcode="electricitypurch" if recordcategory==91 & itemcode=="1
+> 2"      ;
+itemcode was str12 now str16
+(54619 real changes made)
+
+. replace itemcode="lube" if recordcategory==91 & itemcode=="13"  ;
+(47911 real changes made)
+
+. replace itemcode="water" if recordcategory==91 & itemcode=="14" ;
+(13188 real changes made)
+
+. replace itemcode="other" if recordcategory==91 & itemcode=="15" ;
+(16303 real changes made)
+
+. replace itemcode="totalfuelelec" if recordcategory==91 & itemcode=="9999
+> "       ;
+(55920 real changes made)
+
+. replace itemcode="totalrawmaterials" if recordcategory==131 & itemcode==
+> "9999"  ;
+(0 real changes made)
+
+. replace itemcode="totalimportedmaterials" if recordcategory==133 & itemc
+> ode=="9999"     ;
+(0 real changes made)
+
+. collapse (sum) value, by (industrycode- scheme uniqid itemcode) ;
+
+. reshape wide value, i(industrycode- scheme uniqid) j(itemcode) string   
+> ;
+(note: j = biomass coal coalgas diesel electricitypurch furnaceoil lignite
+>  liqpetgas lube natgas other otherfueloil petrol totalfuelelec water woo
+> d)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   271038   ->   55865
+Number of variables                   7   ->      21
+j variable (16 values)         itemcode   ->   (dropped)
+xij variables:
+                                  value   ->   valuebiomass valuecoal ... 
+> valuewood
+--------------------------------------------------------------------------
+> ---
+
+.         save "$work/ASI9495block10", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block10.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block10
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> workdonebyothers        19-28
+> repairmaintmachinery    29-38
+> repairmaintbuilding     39-48
+> repairmaintothers       49-58
+> inwardfreightetc        59-68
+> ratesandtaxes   69-78
+> postagetelephoneetc     79-88
+> insurancecharges        89-98
+> bankingcharges  99-108
+> printingstationery      109-118
+> filler  119-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==101     ;
+(1618139 observations deleted)
+
+. drop filler recordcategory linkcode     ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. egen repairmainttotal=rowtotal(repairmaint*);
+
+.  drop repairmaintmachinery-repairmaintothers    ;
+
+. save "$work/ASI9495block11", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block11.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block11
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> miscellaneous   19-28
+> totalotherexp   29-38
+> rentoflandetc   39-48
+> rentforbuilding 49-58
+> rentforpm       59-68
+> rentforotherassets      69-78
+> totalrent       79-88
+> interest        89-98
+> purchesevalueofgoodssold        99-108
+> labourcostownconstruction       109-118
+> filler  119-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==102     ;
+(1617899 observations deleted)
+
+. drop filler recordcategory linkcode     ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. save "$work/ASI9495block12", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block12.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block12
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> othersownconstruction   19-28
+> totalownconstruction    29-38
+> workdoneforothers       39-48
+> nonindustrialsvcs       49-58
+> varstockofsemifin       59-68
+> valueofelectricitysold  69-78
+> valueofownconstruction  79-88
+> totalotheroutput        89-98
+> salevaluegoodssold      99-108
+> filler  109-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==111     ;
+(1626987 observations deleted)
+
+. drop filler recordcategory      ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(1 observation deleted)
+
+. save "$work/ASI9495block13", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block13.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block13
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> electricitypurchased    19-29
+> electricitygenerated    30-40
+> electricitysold 41-51
+> electricityconsumed     52-62
+> filler  63-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==121     ;
+(1620658 observations deleted)
+
+. drop filler recordcategory linkcode     ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. save "$work/ASI9495block14", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block14.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block14
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> itemcode1       19-22
+> qty1    23-33
+> value1  34-44
+> itemcode2       45-48
+> qty2    49-59
+> value2  60-70
+> itemcode3       71-74
+> qty3    75-85
+> value3  86-96
+> itemcode4       97-100
+> qty4    101-111
+> value4  112-122
+> filler  123-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==131     ;
+(1535187 observations deleted)
+
+. drop filler     ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(2 observations deleted)
+
+. tempfile master ;
+
+. save `master'   ;
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000s.tmp saved
+
+.         forval i=1/4 {  ;
+  2. use `master', clear     ;
+  3. keep   industrycode- recordcategory uniqid itemcode`i' value`i' ;
+  4. rename itemcode itemcode        ;
+  5. rename value value      ;
+  6. tempfile temp`i'        ;
+  7. save `temp`i''  ;
+  8. }       ;
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000t.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000u.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000v.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000w.tmp saved
+
+.         use `temp1', clear      ;
+
+. append using `temp2'    ;
+
+. append using `temp3'    ;
+
+. append using `temp4'    ;
+
+.         drop if itemcode==0     ;
+(83312 observations deleted)
+
+. keep if itemcode==9999  ;
+(421335 observations deleted)
+
+.         tostring itemcode, replace      ;
+itemcode was float now str4
+
+. replace itemcode="totalrawmaterials" if recordcategory==131 & itemcode==
+> "9999"  ;
+itemcode was str4 now str17
+(53609 real changes made)
+
+. replace itemcode="totalimportedmaterials" if recordcategory==133 & itemc
+> ode=="9999"     ;
+(0 real changes made)
+
+. collapse (sum) value, by (industrycode- scheme uniqid itemcode) ;
+
+. reshape wide value, i(industrycode- scheme uniqid) j(itemcode) string   
+> ;
+(note: j = totalrawmaterials)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                    53333   ->   53333
+Number of variables                   7   ->       6
+j variable (1 values)          itemcode   ->   (dropped)
+xij variables:
+                                  value   ->   valuetotalrawmaterials
+--------------------------------------------------------------------------
+> ---
+
+.         save "$work/ASI9495block15", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block15.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block15
+> .dta saved
+
+. #delim ;
+delimiter now ;
+.         clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> itemcode1       19-22
+> qty1    23-33
+> value1  34-44
+> itemcode2       45-48
+> qty2    49-59
+> value2  60-70
+> itemcode3       71-74
+> qty3    75-85
+> value3  86-96
+> itemcode4       97-100
+> qty4    101-111
+> value4  112-122
+> filler  123-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==133     ;
+(1670578 observations deleted)
+
+. drop filler     ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(0 observations are duplicates)
+
+. tempfile master ;
+
+. save `master'   ;
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000014.tmp saved
+
+.         forval i=1/4 {  ;
+  2. use `master', clear     ;
+  3. keep   industrycode- recordcategory uniqid itemcode`i' value`i' ;
+  4. rename itemcode itemcode        ;
+  5. rename value value      ;
+  6. tempfile temp`i'        ;
+  7. save `temp`i''  ;
+  8. }       ;
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000015.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000016.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000017.tmp saved
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000018.tmp saved
+
+.         use `temp1', clear      ;
+
+. append using `temp2'    ;
+
+. append using `temp3'    ;
+
+. append using `temp4'    ;
+
+.         drop if itemcode==0     ;
+(5368 observations deleted)
+
+. keep if itemcode==9999  ;
+(8069 observations deleted)
+
+.         tostring itemcode, replace      ;
+itemcode was float now str4
+
+. replace itemcode="totalrawmaterials" if recordcategory==131 & itemcode==
+> "9999"  ;
+(0 real changes made)
+
+. replace itemcode="totalimportedmaterials" if recordcategory==133 & itemc
+> ode=="9999"     ;
+itemcode was str4 now str22
+(3263 real changes made)
+
+. collapse (sum) value, by (industrycode- scheme uniqid itemcode) ;
+
+. reshape wide value, i(industrycode- scheme uniqid) j(itemcode) string   
+> ;
+(note: j = totalimportedmaterials)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                     3251   ->    3251
+Number of variables                   7   ->       6
+j variable (1 values)          itemcode   ->   (dropped)
+xij variables:
+                                  value   ->   valuetotalimportedmaterials
+--------------------------------------------------------------------------
+> ---
+
+.         save "$work/ASI9495block17", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block17.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block17
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> itemcode        19-22
+> qtymanufactured 23-33
+> qtysold 34-44
+> grosssalevalue  45-55
+> excisedutyproducts      56-66
+> saletaxproducts 67-77
+> distexpensesother       78-88
+> distexpensestotal       89-99
+> itemwisensvunit 100-110
+> itemwiseexactvalue      111-121
+> filler  122-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==141     ;
+(1520914 observations deleted)
+
+. drop filler recordcategory      ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(15 observations deleted)
+
+. keep if itemcode==9999;
+(109397 observations deleted)
+
+.  drop linkcode-qtysold  ;
+
+. gsort +uniqid - grosssalevalue - distexpensestotal - saletax - distexpen
+> sesother        ;
+
+. by uniqid: g rank=_n    ;
+
+. keep if rank==1;
+(98 observations deleted)
+
+.  drop rank      ;
+
+. save "$work/ASI9495block18", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block18.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block18
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. clear;
+
+.         qui infix       
+> str industrycode        1-4
+> str runningslno 5-9
+> str state       10-11
+> str scheme      12
+> recordcategory  13-15
+> linkcode        16-18
+> exciseduty      19-29
+> saletax 30-40
+> transportcharges        41-51
+> commissiontoagents      52-62
+> rebates 63-73
+> otherdistexp    74-84
+> totaldistexp    85-95
+> filler  96-127
+> using "$input/ASID9495.txt"     ;
+
+. g uniqid= industry+ runningslno+ state+ scheme  ;
+
+. keep if recordcategory==142     ;
+(1635941 observations deleted)
+
+. drop filler recordcategory      ;
+
+. duplicates drop ;
+
+Duplicates in terms of all variables
+
+(3 observations deleted)
+
+. save "$work/ASI9495block19", replace    ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495
+> block19.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//ASI9495block19
+> .dta saved
+
+. #delim ;
+delimiter now ;
+. use "$work/ASI9495block1", replace      ;
+
+. merge industry-scheme uniqid using 
+> "$work/ASI9495block2" 
+> "$work/ASI9495block3" 
+> "$work/ASI9495block4" 
+> "$work/ASI9495block5" 
+> "$work/ASI9495block6" 
+> "$work/ASI9495block7" 
+> "$work/ASI9495block8" 
+> "$work/ASI9495block9" 
+> "$work/ASI9495block10" 
+> "$work/ASI9495block11" 
+> "$work/ASI9495block12" 
+> "$work/ASI9495block13" 
+> "$work/ASI9495block14"
+> "$work/ASI9495block15" 
+> "$work/ASI9495block17"  
+> "$work/ASI9495block18" 
+> "$work/ASI9495block19"
+> , sort unique ;
+(note: you are using old merge syntax; see [D] merge for new syntax)
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+note: label truncated to 80 characters
+
+. drop _merge*;
+
+. ***Fix States;
+. # delim ;
+delimiter now ;
+. destring state, replace;
+state has all characters numeric; replaced as byte
+
+. lab def state
+> 2 "ANDHRA PRADESH"
+> 
+> 4 "ASSAM"
+> 5 "BIHAR"
+> 6 "GOA"
+> 7 "GUJARAT"
+> 8 "HARYANA"
+> 9 "HIMACHAL PRADESH"
+> 10 "JAMMU & KASHMIR"
+> 11 "KARNATAKA"
+> 12 "KERALA"
+> 13 "MADHYA PRADESH"
+> 14 "MAHARASHTRA"
+> 15 "MANIPUR"
+> 16 "MEGHALAYA"
+> 
+> 18 "NAGALAND"
+> 19 "ORISSA"
+> 20 "PUNJAB"
+> 21 "RAJASTHAN"
+> 
+> 23 "TAMIL NADU"
+> 24 "TRIPURA"
+> 25 "UTTAR PRADESH"
+> 26 "WEST BENGAL"
+> 27 "ANDAMAN AND NICOBAR ISLANDS"
+> 28 "CHANDIGARH"
+> 29 "DADRA  AND  NAGAR  HAVELI"
+> 30 "DAMAN  &  DIU "
+> 31 "DELHI"
+> 
+> 33 "PONDICHERRY"
+> , modify;
+
+. lab val state state;
+
+. decode state, g(state2);
+
+. drop state;
+
+. rename state2 state;
+
+. tab state, mi;
+
+                      state |      Freq.     Percent        Cum.
+----------------------------+-----------------------------------
+ANDAMAN AND NICOBAR ISLANDS |         38        0.07        0.07
+             ANDHRA PRADESH |      5,494        9.48        9.55
+                      ASSAM |        949        1.64       11.18
+                      BIHAR |      1,769        3.05       14.24
+                 CHANDIGARH |        328        0.57       14.80
+  DADRA  AND  NAGAR  HAVELI |        170        0.29       15.10
+             DAMAN  &  DIU  |        239        0.41       15.51
+                      DELHI |      1,999        3.45       18.96
+                        GOA |        257        0.44       19.40
+                    GUJARAT |      5,505        9.50       28.90
+                    HARYANA |      2,026        3.50       32.40
+           HIMACHAL PRADESH |        370        0.64       33.03
+            JAMMU & KASHMIR |        282        0.49       33.52
+                  KARNATAKA |      3,207        5.53       39.05
+                     KERALA |      2,349        4.05       43.11
+             MADHYA PRADESH |      2,196        3.79       46.90
+                MAHARASHTRA |      7,515       12.97       59.87
+                    MANIPUR |         77        0.13       60.00
+                  MEGHALAYA |         36        0.06       60.06
+                   NAGALAND |         85        0.15       60.21
+                     ORISSA |      1,098        1.89       62.10
+                PONDICHERRY |        285        0.49       62.59
+                     PUNJAB |      3,003        5.18       67.78
+                  RAJASTHAN |      2,315        3.99       71.77
+                 TAMIL NADU |      8,006       13.81       85.58
+                    TRIPURA |        155        0.27       85.85
+              UTTAR PRADESH |      5,349        9.23       95.08
+                WEST BENGAL |      2,850        4.92      100.00
+----------------------------+-----------------------------------
+                      Total |     57,952      100.00
+
+. ***Code Ownership Organization and others;
+. # delim ;
+delimiter now ;
+. destring typeoforganisation, replace;
+typeoforganisation already numeric; no replace
+
+. lab def typeoforganisation
+> 1 "Individual Proprietorship"
+> 2 "Joint  Family (HUF)"
+> 3 "Partnership"
+> 4 "Public  Limited  Company"
+> 5 "Private Limited  Company  "
+> 6 "Government departmental  enterprises"
+> 7 "Public Corporation  by  special Act of Parliament  or State Legislatu
+> re"
+> 8 "Co-Operative Society"
+> 9 "Others  (including  trusts, wakf,  boards etc.)"
+> ,modify;
+
+. lab val typeoforganisation typeoforganisation;
+
+. decode typeoforganisation, g(typeoforganisation2);
+
+. drop typeoforganisation;
+
+. rename typeoforganisation2 typeoforganisation;
+
+. tab typeoforganisation, mi;
+
+                     typeoforganisation |      Freq.     Percent        Cu
+> m.
+----------------------------------------+---------------------------------
+> --
+                                        |         39        0.07        0.
+> 07
+                   Co-Operative Society |      1,416        2.44        2.
+> 51
+   Government departmental  enterprises |      1,689        2.91        5.
+> 43
+              Individual Proprietorship |     11,239       19.39       24.
+> 82
+                    Joint  Family (HUF) |      2,710        4.68       29.
+> 50
+Others  (including  trusts, wakf,  boar |        247        0.43       29.
+> 92
+                            Partnership |     20,132       34.74       64.
+> 66
+             Private Limited  Company   |     11,387       19.65       84.
+> 31
+               Public  Limited  Company |      7,659       13.22       97.
+> 53
+Public Corporation  by  special Act of  |      1,434        2.47      100.
+> 00
+----------------------------------------+---------------------------------
+> --
+                                  Total |     57,952      100.00
+
+. # delim ;
+delimiter now ;
+. destring typeofownership, replace;
+typeofownership already numeric; no replace
+
+. lab def typeofownership
+> 1 "Wholly Central Government"
+> 2 "Wholly State and/or Local Government "
+> 3 "Central  Government and State and/or Local  Government jointly "
+> 4 "Joint  Sector Public"
+> 5 "Joint  Sector  Private  "
+> 6 "Wholly  private  Ownership"
+> ,modify;
+
+. lab val typeofownership typeofownership;
+
+. decode typeofownership, g(typeofownership2);
+
+. drop typeofownership;
+
+. rename typeofownership2 typeofownership;
+
+. tab typeofownership, mi;
+
+                        typeofownership |      Freq.     Percent        Cu
+> m.
+----------------------------------------+---------------------------------
+> --
+                                        |         41        0.07        0.
+> 07
+Central  Government and State and/or Lo |        396        0.68        0.
+> 75
+               Joint  Sector  Private   |        572        0.99        1.
+> 74
+                   Joint  Sector Public |        820        1.41        3.
+> 16
+             Wholly  private  Ownership |     52,943       91.36       94.
+> 51
+              Wholly Central Government |        889        1.53       96.
+> 05
+  Wholly State and/or Local Government  |      2,291        3.95      100.
+> 00
+----------------------------------------+---------------------------------
+> --
+                                  Total |     57,952      100.00
+
+. /***DEMULTIPLY DATA ---WHY IS PREMULTIPLICATION DONE BY CSO EVEN THO MLT
+> IPLIER IS IN DATA?!!? AAAAARGHHHH!!!Extract Multipliers based on Scheme 
+> from Shanthi Nataraj email below;
+> */;
+. # delim ;
+delimiter now ;
+. tab scheme, mi;
+
+     scheme |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     13,266       22.89       22.89
+          2 |      9,841       16.98       39.87
+          3 |        198        0.34       40.21
+          4 |      6,820       11.77       51.98
+          5 |     26,590       45.88       97.87
+          6 |        693        1.20       99.06
+          7 |         91        0.16       99.22
+          8 |         12        0.02       99.24
+          9 |        441        0.76      100.00
+------------+-----------------------------------
+      Total |     57,952      100.00
+
+. replace multiplier=multiplier/1000;
+(57926 real changes made)
+
+. foreach var of varlist  noofunits  openinggrossbuilding- totaldistexp {;
+  2. qui replace `var' = `var'/(multiplier);
+  3. };
+
+. g year=1994;
+
+. # delim cr
+delimiter now cr
+. 
+. ****STANDARDIZE IMPORTANT VARNAMES FOR LATER APPEND
+. g district=substr(statedist,length(statedist)-1,2)
+(26 missing values generated)
+
+. tostring ruralurban, replace
+ruralurban was byte now str1
+
+. rename runningslno dsl
+
+. drop recordcategory
+
+. drop linkcode
+
+. 
+. rename permanentslno psl
+
+. 
+. drop fodregioncode
+
+. 
+. drop backwardareacode
+
+. rename openclosedcode status
+
+. rename outstandingloanclose closeoutstandingloan
+
+. rename menmanufdays manufdaysmen
+
+. rename womenmanufdays manufdayswomen
+
+. rename childrenmanufdays manufdayschildren
+
+. rename thrucontrmanufdays manufdaysthrucontr
+
+. rename supervstaffmanufdays manufdayssupervstaff
+
+. rename otheremployeesmanufdays manufdaysotheremployees
+
+. rename totalEEsmanufdays manufdaystotalEEs
+
+. rename mennonmanufdays nonmanufdaysmen
+
+. rename womennonmanufdays nonmanufdayswomen
+
+. rename childrennonmanufdays nonmanufdayschildren
+
+. rename thrucontrnonmanufdays nonmanufdaysthrucontr
+
+. rename supervstaffnonmanufdays nonmanufdayssupervstaff
+
+. rename otheremployeesnonmanufdays nonmanufdaysotheremployees
+
+. rename totalEEsnonmanufdays nonmanufdaystotalEEs
+
+. rename mentotaldays totaldaysmen
+
+. rename womentotaldays totaldayswomen
+
+. rename childrentotaldays totaldayschildren
+
+. rename thrucontrtotaldays totaldaysthrucontr
+
+. rename supervstafftotaldays totaldayssupervstaff
+
+. rename otheremployeestotaldays totaldaysotheremployees
+
+. rename totalEEstotaldays totaldaystotalEEs
+
+. rename men_avg _avgmen
+
+. rename women_avg _avgwomen
+
+. rename children_avg _avgchildren
+
+. rename thrucontr_avg _avgthrucontr
+
+. rename supervstaff_avg _avgsupervstaff
+
+. rename otheremployees_avg _avgotheremployees
+
+. rename gproprietors_avg _avggproprietors
+
+. rename unpaidEE_avg _avgunpaidEE
+
+. rename ifcoop_avg _avgifcoop
+
+. rename totalEE_avg _avgtotalEEs
+
+. rename wagesandsalariesEEs wagesandsalariestotalEEs
+
+. rename bonusEEs bonustotalEEs
+
+. rename contributiontopfEEs contributiontopftotalEEs
+
+. rename welfareexpenseEEs welfareexpensetotalEEs
+
+. rename totallabourcostEEs totallabourcosttotalEEs
+
+. rename wagessupervisory wagesandsalariessupervstaff
+
+. rename bonussupervisory bonussupervstaff
+
+. rename contribsupervisory contributiontopfsupervstaff
+
+. rename welfareexpsupervisory welfareexpensesupervstaff
+
+. 
+. save "$intdata/ASI9495_clean.dta", replace
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASI9
+> 495_clean.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASI9495_cle
+> an.dta saved
+
+. 
+. forval i = 1/19 {
+  2. cap erase "$work/ASI9495block`i'.dta" 
+  3. }
+
+. 
+end of do-file

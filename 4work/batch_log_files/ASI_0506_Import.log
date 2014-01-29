@@ -1,0 +1,898 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   11.2   Copyright 1985-2009 StataCorp LP
+  Statistics/Data Analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        http://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Single-user 4-core Stata perpetual license:
+       Serial number:  50110563506
+         Licensed to:  Stephen O'Connell
+                       City University of New York
+
+Notes:
+      1.  (/m# option or -set memory-) 2048.00 MB allocated to data
+      2.  (/v# option or -set maxvar-) 5000 maximum variables
+      3.  Stata running in batch mode
+
+. do ..\..\2progs\asi_build\ASI_0506_Import.do 
+
+. ************************************************************************
+. ***************Ghani - Kerr - O'Connell                  ***************
+> ********
+. ***************Political Reservations and Women's Entrepreneuship*******
+. ***************Journal of Development Economics, 2014 ******************
+. ***************Replication Backup                                *******
+> ****************
+. ************************************************************************
+. ***Note that this file is for a general-purpose data read-in & clean, th
+> us
+. ***operates on far more variables than may be necessary given final use.
+. 
+. clear
+
+. clear matrix
+
+. clear mata
+
+. cap log close
+
+. 
+. global root "C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup"
+
+. include "$root/2progs/00_Set_paths.do"
+
+. version 11.0
+
+. dis "$root"
+C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup
+
+. assert "$root" !="" //assert root capture worked for user
+
+. global data "$root/1data/"
+
+. global do "$root/2progs/"
+
+. global figures "$root/3figures/"
+
+. global work "$root/4work/"
+
+. global intdata "$root/5intdata/"
+
+. global finaldata "$root/6finaldata/"
+
+. global date=c(current_date)
+
+. global time=subinstr(c(current_time),":","",.)
+
+. cd "$work" //default directory to put files, although all outputs should
+>  be directed via a global macro
+C:\OpenCode\GKO_Reservations_JDE2014_ReplBackup\4work
+
+. set seed 99
+
+. set mem 2g, perm
+
+Current memory allocation
+
+                    current                                 memory usage
+    settable          value     description                 (1M = 1024k)
+    --------------------------------------------------------------------
+    set maxvar         5000     max. variables allowed           1.947M
+    set memory         2048M    max. data space              2,048.000M
+    set matsize         800     max. RHS vars in models          4.950M
+                                                            -----------
+                                                             2,054.897M
+(set memory preference recorded)
+
+. 
+. 
+. ************************************************************************
+. ************************************************************************
+. global input "$data/ASI/ASI2005_06/"
+
+. 
+. #delim ;                
+delimiter now ;
+. clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> str psl 10-14   
+> str scheme      15-15   
+> str industrycode        16-19   
+> str industrycode5       20-24   
+> str state       25-26   
+> str district    27-28   
+> str ruralurban  29-29   
+> rosrocode       30-34   
+> noofunits       35-37   
+> status  38-39   
+> noofmanufacturingdays   40-42   
+> noofnonmanufacturingdays        43-45   
+> totalnoofworkingdays    46-48   
+> costofproduction        49-60   
+> multiplier      61-69   
+> extra   70-178  
+> using "$input/asi06m.txt"               ;
+
+. keep if block=="A"              ;
+(1924141 observations deleted)
+
+. drop extra year block           ;
+
+. save "$work/tempA", replace             ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempA.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempA.dta save
+> d
+
+.                 #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> typeoforganisation      10-11   
+> typeofownership 12-12   
+> noofunits2      13-16   
+> unitsinstate    17-20   
+> yearofinitialprod       21-24   
+> accountingyearopening   25-33   
+> accountingyearclosing   34-42   
+> monthsofoperation       43-44   
+> computers       45-45   
+> floppy  46-46   
+> extra   47-178  
+> using "$input/asi06m.txt"               ;
+
+. keep if block=="B"              ;
+(1935199 observations deleted)
+
+. drop extra year block           ;
+
+. save "$work/tempB", replace             ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempB.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempB.dta save
+> d
+
+.                 #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> slno    10-11   
+> openinggross    12-23   
+> addbyreval      24-35   
+> addnew  36-47   
+> deduction       48-59   
+> closinggross    60-71   
+> uptoyearbeg     72-83   
+> providedyear    84-95   
+> uptoyearend     96-107  
+> openingnet      108-119 
+> closingnet      120-131 
+> extra   132-178 
+> using "$input/asi06m.txt"               ;
+
+. keep if block=="C"              ;
+(1669579 observations deleted)
+
+. drop extra year block           ;
+
+. tostring slno, replace  ;
+slno was float now str2
+
+.         replace slno="land" if slno=="1"        ;
+slno was str2 now str4
+(28360 real changes made)
+
+.         replace slno="building" if slno=="2"    ;
+slno was str4 now str8
+(37119 real changes made)
+
+.         replace slno="plant_mach" if slno=="3"  ;
+slno was str8 now str10
+(43410 real changes made)
+
+.         replace slno="transportequip" if slno=="4"      ;
+slno was str10 now str14
+(34074 real changes made)
+
+.         replace slno="compequip" if slno=="5"   ;
+(27371 real changes made)
+
+.         replace slno="plollutctrl" if slno=="6" ;
+(3420 real changes made)
+
+.         replace slno="otherFA" if slno=="7"     ;
+(41784 real changes made)
+
+.         drop if slno=="8"       ;
+(44623 observations deleted)
+
+.         replace slno="totalcapitalwip" if slno=="9"     ;
+slno was str14 now str15
+(7009 real changes made)
+
+.         replace slno="totalFA" if slno=="10"    ;
+(44696 real changes made)
+
+.         reshape wide openinggross-closingnet, i(dsl) j(slno) string     
+> ;
+(note: j = building compequip land otherFA plant_mach plollutctrl totalFA 
+> totalcapitalwip transportequip)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   267243   ->   44702
+Number of variables                  12   ->      91
+j variable (9 values)              slno   ->   (dropped)
+xij variables:
+                           openinggross   ->   openinggrossbuilding openin
+> ggrosscompequip ... openinggrosstransportequip
+                             addbyreval   ->   addbyrevalbuilding addbyrev
+> alcompequip ... addbyrevaltransportequip
+                                 addnew   ->   addnewbuilding addnewcompeq
+> uip ... addnewtransportequip
+                              deduction   ->   deductionbuilding deduction
+> compequip ... deductiontransportequip
+                           closinggross   ->   closinggrossbuilding closin
+> ggrosscompequip ... closinggrosstransportequip
+                            uptoyearbeg   ->   uptoyearbegbuilding uptoyea
+> rbegcompequip ... uptoyearbegtransportequip
+                           providedyear   ->   providedyearbuilding provid
+> edyearcompequip ... providedyeartransportequip
+                            uptoyearend   ->   uptoyearendbuilding uptoyea
+> rendcompequip ... uptoyearendtransportequip
+                             openingnet   ->   openingnetbuilding openingn
+> etcompequip ... openingnettransportequip
+                             closingnet   ->   closingnetbuilding closingn
+> etcompequip ... closingnettransportequip
+--------------------------------------------------------------------------
+> ---
+
+.         save "$work/tempC", replace             ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempC.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempC.dta save
+> d
+
+.                 #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> slno    10-11   
+> open    12-23   
+> close   24-35   
+> extra   36-178  
+> using "$input/asi06m.txt"               ;
+
+. keep if block=="D"              ;
+(1400272 observations deleted)
+
+. drop extra year block           ;
+
+. tostring slno, replace  ;
+slno was float now str2
+
+.         replace slno="rawmaterials" if slno=="1"        ;
+slno was str2 now str12
+(36499 real changes made)
+
+.         replace slno="fuellube" if slno=="2"    ;
+(8640 real changes made)
+
+.         replace slno="sparesothers" if slno=="3"        ;
+(16904 real changes made)
+
+.         drop if slno=="4"       ;
+(39339 observations deleted)
+
+.         replace slno="semifinished" if slno=="5"        ;
+(16963 real changes made)
+
+.         replace slno="finishedgoods" if slno=="6"       ;
+slno was str12 now str13
+(29818 real changes made)
+
+.         replace slno="totalinventory" if slno=="7"      ;
+slno was str13 now str14
+(40339 real changes made)
+
+.         replace slno="cash" if slno=="8"        ;
+(44498 real changes made)
+
+.         replace slno="sundrydebtors" if slno=="9"       ;
+(39692 real changes made)
+
+.         replace slno="othercurrentasts" if slno=="10"   ;
+slno was str14 now str16
+(37807 real changes made)
+
+.         drop if slno=="11"      ;
+(44847 observations deleted)
+
+.         replace slno="sundrycreditors" if slno=="12"    ;
+(39101 real changes made)
+
+.         replace slno="overdraftsetc" if slno=="13"      ;
+(26186 real changes made)
+
+.         replace slno="othercurrentliab" if slno=="14"   ;
+(39650 real changes made)
+
+.         drop if slno=="15"      ;
+(42188 observations deleted)
+
+.         replace slno="workingcapital" if slno=="16"     ;
+(44857 real changes made)
+
+.         replace slno="outstandingloan" if slno=="17"    ;
+(33845 real changes made)
+
+.         reshape wide open close, i(dsl) j(slno) string  ;
+(note: j = cash finishedgoods fuellube othercurrentasts othercurrentliab o
+> utstandingloan overdraftsetc rawmaterials semifinished sparesothers sund
+> rycreditors sundrydebtors totalinventory workingcapital)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   454799   ->   44871
+Number of variables                   4   ->      29
+j variable (14 values)             slno   ->   (dropped)
+xij variables:
+                                   open   ->   opencash openfinishedgoods 
+> ... openworkingcapital
+                                  close   ->   closecash closefinishedgood
+> s ... closeworkingcapital
+--------------------------------------------------------------------------
+> ---
+
+.         save "$work/tempD", replace             ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempD.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempD.dta save
+> d
+
+.                                                                         
+>                                                                         
+>                                                 #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> slno    10-11   
+> manufdays       12-19   
+> nonmanufdays    20-27   
+> totaldays       28-37   
+> _avg    38-45   
+> days_paid       46-55   
+> wagesandsalaries        56-67   
+> bonus   68-79   
+> contributiontopf        80-91   
+> welfareexpense  92-103  
+> extra   104-178 
+> using "$input/asi06m.txt"               ;
+
+. keep if block=="E"              ;
+(1698680 observations deleted)
+
+. drop extra year block           ;
+
+. tostring slno, replace  ;
+slno was float now str2
+
+.         replace slno="men" if slno=="1" ;
+slno was str2 now str3
+(40500 real changes made)
+
+.         replace slno="women" if slno=="2"       ;
+slno was str3 now str5
+(11900 real changes made)
+
+.         replace slno="children" if slno=="3"    ;
+slno was str5 now str8
+(5 real changes made)
+
+.         drop if slno=="4"       ;
+(40777 observations deleted)
+
+.         replace slno="thrucontr" if slno=="5"   ;
+slno was str8 now str9
+(12693 real changes made)
+
+.         drop if slno=="6"       ;
+(43566 observations deleted)
+
+.         replace slno="supervstaff" if slno=="7" ;
+slno was str9 now str11
+(36961 real changes made)
+
+.         replace slno="otheremployees" if slno=="8"      ;
+slno was str11 now str14
+(37051 real changes made)
+
+.         replace slno="unpaid" if slno=="9"      ;
+(14535 real changes made)
+
+.         replace slno="totalEEs" if slno=="10"   ;
+(44777 real changes made)
+
+.         drop if slno=="11"      ;
+(0 observations deleted)
+
+.         drop if slno=="12"      ;
+(0 observations deleted)
+
+.         reshape wide manufdays-welfareexp, i(dsl) j(slno) string        
+> ;
+(note: j = children men otheremployees supervstaff thrucontr totalEEs unpa
+> id women)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   198422   ->   44777
+Number of variables                  11   ->      73
+j variable (8 values)              slno   ->   (dropped)
+xij variables:
+                              manufdays   ->   manufdayschildren manufdays
+> men ... manufdayswomen
+                           nonmanufdays   ->   nonmanufdayschildren nonman
+> ufdaysmen ... nonmanufdayswomen
+                              totaldays   ->   totaldayschildren totaldays
+> men ... totaldayswomen
+                                   _avg   ->   _avgchildren _avgmen ... _a
+> vgwomen
+                              days_paid   ->   days_paidchildren days_paid
+> men ... days_paidwomen
+                       wagesandsalaries   ->   wagesandsalarieschildren wa
+> gesandsalariesmen ... wagesandsalarieswomen
+                                  bonus   ->   bonuschildren bonusmen ... 
+> bonuswomen
+                       contributiontopf   ->   contributiontopfchildren co
+> ntributiontopfmen ... contributiontopfwomen
+                         welfareexpense   ->   welfareexpensechildren welf
+> areexpensemen ... welfareexpensewomen
+--------------------------------------------------------------------------
+> ---
+
+.         save "$work/tempE", replace             ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempE.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempE.dta save
+> d
+
+.                                                 #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> workdonebyothers        10-21   
+> repairmaintbuilding     22-33   
+> repairmaintmachinery    34-45   
+> repairmaintothpol       46-57   
+> repairmaintothers       58-69   
+> operatingexpenses       70-81   
+> nonooperatingexpenses   82-93   
+> insurancecharges        94-105  
+> totalrent       106-117 
+> totalotherexp   118-129 
+> rentforbuilding 130-141 
+> rentoflandetc   142-153 
+> interest        154-165 
+> purchesevalueofgoodssold        166-177 
+> using "$input/asi06m.txt"               ;
+
+. keep if block=="F"              ;
+(1936079 observations deleted)
+
+. drop year block         ;
+
+. egen repairmainttotal=rowtotal(repairmaint*);
+
+.  drop repairmaintbuilding-repairmaintothers     ;
+
+.         save "$work/tempF", replace             ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempF.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempF.dta save
+> d
+
+.                                                                         
+>         #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> workdoneforothers       10-21   
+> varstockofsemifin       22-33   
+> valueofelectricitysold  34-45   
+> valueofownconstruction  46-57   
+> balancegoodssold        58-69   
+> rentreceived    70-81   
+> totalotheroutput        82-93   
+> rentrecvdbuilding       94-105  
+> rentrecvdland   106-117 
+> interestrecvd   118-129 
+> salevaluegoodssold      130-141 
+> extra   142-178 
+> using "$input/asi06m.txt"               ;
+
+. keep if block=="G"              ;
+(1938848 observations deleted)
+
+. drop extra year block           ;
+
+. save "$work/tempG", replace             ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempG.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempG.dta save
+> d
+
+.                                                 #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> slno    10-11   
+> itemcode        12-16   
+> quantityunit    17-19   
+> quantity        20-35   
+> purchasevalue   36-47   
+> rateperunit     48-62   
+> extra1  63-178  
+> using "$input/asi06m.txt"       ;
+
+.         keep if block=="H"      ;
+(1508303 observations deleted)
+
+.         drop year block extra* itemcode quantityunit rateperunit        
+> ;
+
+.         keep if slno>=15 & slno<=22     ;
+(227619 observations deleted)
+
+.         tostring slno, replace  ;
+slno was float now str2
+
+.         replace slno="electricitygenerated" if slno=="15"       ;
+slno was str2 now str20
+(14333 real changes made)
+
+. replace slno="electricitypurchased" if slno=="16"       ;
+(43008 real changes made)
+
+.         replace slno="fuel" if slno=="17"       ;
+(39667 real changes made)
+
+.         replace slno="coal" if slno=="18"       ;
+(4657 real changes made)
+
+.         replace slno="othfuel" if slno=="19"    ;
+(12471 real changes made)
+
+.         replace slno="consstore" if slno=="20"  ;
+(41948 real changes made)
+
+.         replace slno="totalfuelelec" if slno=="21"      ;
+(44709 real changes made)
+
+.         replace slno="totalrawmaterials" if slno=="22"  ;
+(44730 real changes made)
+
+.         rename purchasevalue value      ;
+
+.         reshape wide value quantity, i(dsl) j(slno) string      ;
+(note: j = coal consstore electricitygenerated electricitypurchased fuel o
+> thfuel totalfuelelec totalrawmaterials)
+
+Data                               long   ->   wide
+--------------------------------------------------------------------------
+> ---
+Number of obs.                   245523   ->   44730
+Number of variables                   4   ->      17
+j variable (8 values)              slno   ->   (dropped)
+xij variables:
+                                  value   ->   valuecoal valueconsstore ..
+> . valuetotalrawmaterials
+                               quantity   ->   quantitycoal quantityconsst
+> ore ... quantitytotalrawmaterials
+--------------------------------------------------------------------------
+> ---
+
+.         rename  quantityelectricitypurchased electricitypurchased ;
+
+. rename  quantityelectricitygenerated electricitygenerated ;
+
+. g electricityconsumed = electricitypurchased ;
+(1722 missing values generated)
+
+. drop quantity* ;
+
+. save "$work/tempH", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempH.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempH.dta save
+> d
+
+.                                                                         
+>                                                                         
+>                         #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> slno    10-11   
+> itemcode        12-16   
+> quantitycode    17-19   
+> quantity        20-35   
+> purchasevalue   36-47   
+> rateperunit     48-62   
+> extra1  63-178  
+> using "$input/asi06m.txt"       ;
+
+.         keep if block=="I"      ;
+(1957413 observations deleted)
+
+.         drop year block extra* itemcode quantitycode quantity   ;
+
+.         tostring slno, replace  ;
+slno was float now str2
+
+.         keep if slno=="7";
+(17635 observations deleted)
+
+.  drop slno;
+
+.  rename purchasevalue valuetotalimportedmaterials       ;
+
+.         save "$work/tempI", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempI.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempI.dta save
+> d
+
+.                                         #delim ;
+delimiter now ;
+.                 clear;
+
+.                 qui infix               
+> year    1-2     
+> str block       3-4     
+> str dsl 5-9     
+> slno    10-11   
+> itemcode        12-16   
+> quantityunit    17-19   
+> qtymanufactured 20-35   
+> qtysold 36-51   
+> grosssalevalue  52-63   
+> exciseduty      64-75   
+> saletax 76-87   
+> distexpensesother       88-99   
+> distexpensestotal       100-111 
+> itemwisensvunit 112-126 
+> itemwiseexactvalue      127-138 
+> extra   139-178 
+> using "$input/asi06m.txt"       ;
+
+.         keep if block=="J"      ;
+(1864491 observations deleted)
+
+.         drop year block extra itemcode-qtysold itemwisensvunit  ;
+
+.         tostring slno, replace  ;
+slno was float now str2
+
+.         keep if slno=="12";
+(80383 observations deleted)
+
+.  drop slno      ;
+
+.         save "$work/tempJ", replace     ;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempJ.d
+> ta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//tempJ.dta save
+> d
+
+.         #delim ;
+delimiter now ;
+. cd "$work";
+C:\OpenCode\GKO_Reservations_JDE2014_ReplBackup\4work
+
+. use tempA, clear;
+
+. merge dsl using tempB tempC tempD tempE tempF tempG tempH tempI tempJ, s
+> ort;
+(note: you are using old merge syntax; see [D] merge for new syntax)
+
+. drop _merge*;
+
+. #delim ;
+delimiter now ;
+. destring state, replace ;
+state has all characters numeric; replaced as byte
+
+. lab def state
+> 35 "ANDAMAN AND NICOBAR ISLANDS"
+> 28 "ANDHRA PRADESH"
+> 12 "ARUNCHAL PRADESH"
+> 18 "ASSAM"
+> 10 "BIHAR"
+> 4 "CHANDIGARH"
+> 22 "CHHATISGARH"
+> 26 "DADRA  AND  NAGAR  HAVELI"
+> 25 "DAMAN  &  DIU "
+> 7 "DELHI"
+> 30 "GOA"
+> 24 "GUJARAT"
+> 6 "HARYANA"
+> 2 "HIMACHAL PRADESH"
+> 1 "JAMMU & KASHMIR"
+> 20 "JHARKHAND"
+> 29 "KARNATAKA"
+> 32 "KERALA"
+> 31 "LAKSHADEEP"
+> 23 "MADHYA PRADESH"
+> 27 "MAHARASHTRA"
+> 14 "MANIPUR"
+> 17 "MEGHALAYA"
+> 15 "MIZORAM"
+> 13 "NAGALAND"
+> 21 "ORISSA"
+> 34 "PONDICHERRY"
+> 3 "PUNJAB"
+> 8 "RAJASTHAN"
+> 11 "SIKKAM"
+> 33 "TAMIL NADU"
+> 16 "TRIPURA"
+> 9 "UTTAR PRADESH"
+> 5 "UTTARANCHAL"
+> 19 "WEST BENGAL"
+> ;
+
+. lab val state state;
+
+. decode state, g(state2);
+
+. drop state;
+
+. rename state2 state;
+
+. ***Code Ownership Organization and others;
+. tab typeoforganisation, mi;
+
+typeoforgan |
+    isation |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     10,854       18.94       18.94
+          2 |        711        1.24       20.18
+          3 |     13,268       23.15       43.34
+          4 |      6,688       11.67       55.01
+          5 |     13,025       22.73       77.74
+          6 |        111        0.19       77.93
+          7 |        276        0.48       78.41
+          8 |         80        0.14       78.55
+          9 |         17        0.03       78.58
+         10 |        862        1.50       80.09
+         19 |        354        0.62       80.70
+          . |     11,058       19.30      100.00
+------------+-----------------------------------
+      Total |     57,304      100.00
+
+. # delim ;
+delimiter now ;
+. destring typeoforganisation, replace;
+typeoforganisation already numeric; no replace
+
+. lab def typeoforganisation
+> 1 "Individual Proprietorship"
+> 2 "Joint  Family (HUF)"
+> 3 "Partnership"
+> 4 "Public  Limited  Company"
+> 5 "Private Limited  Company  "
+> 6 "Government departmental  enterprises"
+> 7 "Public Corporation  by  special Act of Parliament  or State Legislatu
+> re"
+> 8 "Khadi & Village Industries Commission"
+> 9 "Handlooms"
+> 10 "Co-Operative Society"
+> 19 "Others  (including  trusts, wakf,  boards etc.)"
+> ;
+
+. lab val typeoforganisation typeoforganisation;
+
+. decode typeoforganisation, g(typeoforganisation2);
+
+. drop typeoforganisation;
+
+. rename typeoforganisation2 typeoforganisation;
+
+. tab typeofownership, mi;
+
+typeofowner |
+       ship |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |         10        0.02        0.02
+          1 |        178        0.31        0.33
+          2 |        214        0.37        0.70
+          3 |         53        0.09        0.79
+          4 |        601        1.05        1.84
+          5 |        155        0.27        2.11
+          6 |     45,035       78.59       80.70
+          . |     11,058       19.30      100.00
+------------+-----------------------------------
+      Total |     57,304      100.00
+
+. # delim ;
+delimiter now ;
+. destring typeofownership, replace;
+typeofownership already numeric; no replace
+
+. lab def typeofownership
+> 1 "Wholly Central Government"
+> 2 "Wholly State and/or Local Government "
+> 3 "Central  Government and State and/or Local  Government jointly "
+> 4 "Joint  Sector Public"
+> 5 "Joint  Sector  Private  "
+> 6 "Wholly  private  Ownership"
+> ;
+
+. lab val typeofownership typeofownership;
+
+. decode typeofownership, g(typeofownership2);
+
+. drop typeofownership;
+
+. rename typeofownership2 typeofownership;
+
+. g uniqid=dsl;
+
+. g year=2005;
+
+. save "$intdata/ASI0506_clean", replace;
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASI0
+> 506_clean.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASI0506_cle
+> an.dta saved
+
+. foreach i in A B C D E F G H I J {;
+  2. erase "$work/temp`i'.dta";
+  3. };
+
+. 
+end of do-file

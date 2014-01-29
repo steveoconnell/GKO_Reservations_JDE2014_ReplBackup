@@ -1,0 +1,3 @@
+District concordance constructed by S. O'Connell based primarily on
+ information found at http://www.statoids.com/yin.html but supplemented 
+ with various GOI sources relating administrative changes over time.

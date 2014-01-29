@@ -1,0 +1,22 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   11.2   Copyright 1985-2009 StataCorp LP
+  Statistics/Data Analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        http://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Single-user 4-core Stata perpetual license:
+       Serial number:  50110563506
+         Licensed to:  Stephen O'Connell
+                       City University of New York
+
+Notes:
+      1.  (/m# option or -set memory-) 2048.00 MB allocated to data
+      2.  (/v# option or -set maxvar-) 5000 maximum variables
+      3.  Stata running in batch mode
+
+. run ..\..\2progs\nss_build\51a_Import.do 

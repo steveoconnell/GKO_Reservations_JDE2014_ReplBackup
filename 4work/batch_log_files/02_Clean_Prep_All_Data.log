@@ -1,0 +1,1376 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   11.2   Copyright 1985-2009 StataCorp LP
+  Statistics/Data Analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        http://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Single-user 4-core Stata perpetual license:
+       Serial number:  50110563506
+         Licensed to:  Stephen O'Connell
+                       City University of New York
+
+Notes:
+      1.  (/m# option or -set memory-) 2048.00 MB allocated to data
+      2.  (/v# option or -set maxvar-) 5000 maximum variables
+      3.  Stata running in batch mode
+
+. do ..\..\2progs\02_Clean_Prep_All_Data.do 
+
+. ************************************************************************
+. ***************Ghani - Kerr - O'Connell                  ***************
+> ********
+. ***************Political Reservations and Women's Entrepreneuship*******
+. ***************Journal of Development Economics, 2014 ******************
+. ***************Replication Backup                                *******
+> ****************
+. ************************************************************************
+. clear
+
+. clear matrix
+
+. clear mata
+
+. cap log close
+
+. 
+. global root "C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup"
+
+. include "$root/2progs/00_Set_paths.do"
+
+. version 11.0
+
+. dis "$root"
+C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup
+
+. assert "$root" !="" //assert root capture worked for user
+
+. global data "$root/1data/"
+
+. global do "$root/2progs/"
+
+. global figures "$root/3figures/"
+
+. global work "$root/4work/"
+
+. global intdata "$root/5intdata/"
+
+. global finaldata "$root/6finaldata/"
+
+. global date=c(current_date)
+
+. global time=subinstr(c(current_time),":","",.)
+
+. cd "$work" //default directory to put files, although all outputs should
+>  be directed via a global macro
+C:\OpenCode\GKO_Reservations_JDE2014_ReplBackup\4work
+
+. set seed 99
+
+. set mem 2g, perm
+
+Current memory allocation
+
+                    current                                 memory usage
+    settable          value     description                 (1M = 1024k)
+    --------------------------------------------------------------------
+    set maxvar         5000     max. variables allowed           1.947M
+    set memory         2048M    max. data space              2,048.000M
+    set matsize         800     max. RHS vars in models          4.950M
+                                                            -----------
+                                                             2,054.897M
+(set memory preference recorded)
+
+. 
+. 
+. ************************************************************************
+. ************************************************************************
+. include "$do/subroutines/Clean_Prep_Reservations_Data.do"
+
+. cap log close
+
+. clear
+
+. insheet using "$data/Reservations/Effective Rsvd Elections_byState.csv",
+>  comma names clear
+(5 vars, 35 obs)
+
+. 
+. keep state
+
+. tempfile state
+
+. save `state'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000001.tmp saved
+
+. 
+. clear
+
+. set obs 22
+obs was 0, now 22
+
+. g year=_n+1988
+
+. 
+. cross using `state'
+
+. order state year
+
+. sort state year
+
+. 
+. tempfile master
+
+. save `master'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000004.tmp saved
+
+. 
+. 
+. insheet using "$data/Reservations/Effective Rsvd Elections_byState.csv",
+>  comma names clear
+(5 vars, 35 obs)
+
+. preserve
+
+. drop _expected
+
+. reshape long _, i(state) j(election)
+(note: j = 1 2 3)
+
+Data                               wide   ->   long
+--------------------------------------------------------------------------
+> ---
+Number of obs.                       35   ->     105
+Number of variables                   4   ->       3
+j variable (3 values)                     ->   election
+xij variables:
+                               _1 _2 _3   ->   _
+--------------------------------------------------------------------------
+> ---
+
+. rename _ year
+
+. drop if year==.
+(31 observations deleted)
+
+. tempfile elections
+
+. save `elections'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000009.tmp saved
+
+. restore
+
+. 
+. keep state _expected
+
+. rename _ year
+
+. drop if year==.
+(14 observations deleted)
+
+. g expected = 1
+
+. tempfile expected
+
+. save `expected'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000a.tmp saved
+
+. 
+. use `master'
+
+. merge 1:1 state year using `elections'
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                           708
+        from master                       702  (_merge==1)
+        from using                          6  (_merge==2)
+
+    matched                                68  (_merge==3)
+    -----------------------------------------
+
+. drop _
+
+. merge 1:1 state year using `expected', assert(1 3) nogen
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                           755
+        from master                       755  
+        from using                          0  
+
+    matched                                21  
+    -----------------------------------------
+
+. gsort state +year
+
+. bysort state: g rank=_n
+
+. 
+. *****prep actual reservations
+. g reserved=election
+(702 missing values generated)
+
+. replace reserved=0 if rank==1 & election==.
+(35 real changes made)
+
+. g first_PR_election=year if election==1
+(741 missing values generated)
+
+. egen years_rel_PR=sum(first_PR_election), by(state)
+
+. replace years_rel_PR=year-years_rel_PR
+(776 real changes made)
+
+. g noPRelection = first_PR_election==2012
+
+. egen noresvs=sum(noPRelection), by(state)
+
+. drop first_PR_election
+
+. 
+. 
+. 
+. g reserved_73rdDef=reserved
+(667 missing values generated)
+
+. replace reserved_73rdDef = reserved_73rdDef[_n-1] if state==state[_n-1] 
+> & election==. & year==year[_n-1]+1
+(667 real changes made)
+
+. g reservedYN_73rdDef=reserved_73rdDef!=0
+
+. by state: gen years_rsvd_73rdDef=sum(reservedYN_73rdDef)
+
+. 
+. *****prep expected reservations
+. gsort state +year
+
+. replace expected = 0 if expected==.
+(755 real changes made)
+
+. replace expected = 1 if expected[_n-1]==1 & state==state[_n-1]
+(307 real changes made)
+
+. egen everexpected = max(expected), by(state)
+
+. 
+. g expected_base = expected if everexpected
+(314 missing values generated)
+
+. g expected_fill = expected_base
+(314 missing values generated)
+
+. replace expected_fill = 1 if expected_fill == . & reserved_73rdDef!=. & 
+> reserved_73rdDef>0
+(116 real changes made)
+
+. drop everexpected
+
+. *****
+. 
+. 
+. 
+. g reserved_adj_preferred = reserved
+(667 missing values generated)
+
+. replace reserved_adj_preferred = 1 if rank==1 & (state=="Andhra Pradesh"
+>  | state=="Karnataka")
+(2 real changes made)
+
+. replace reserved_adj_preferred = reserved_adj_preferred[_n-1] if state==
+> state[_n-1] & election==. & year==year[_n-1]+1
+(667 real changes made)
+
+. g reservedYN_adj_preferred=reserved_adj_preferred!=0
+
+. by state: gen years_rsvd_adj_preferred=sum(reservedYN_adj_preferred)
+
+. 
+. g reserved_adj_preferred_pct = reserved_adj_preferred
+
+. replace reserved_adj_preferred_pct=25/33 if state=="Andhra Pradesh" & ye
+> ar<1996
+(7 real changes made)
+
+. replace reserved_adj_preferred_pct=25/33 if state=="Karnataka" & year<19
+> 95
+(6 real changes made)
+
+. g reservedYN_adj_preferred_pct=reserved_adj_preferred_pct!=0
+
+. replace reservedYN_adj_preferred_pct=reserved_adj_preferred_pct if state
+> =="Andhra Pradesh" & year<1996
+(7 real changes made)
+
+. replace reservedYN_adj_preferred_pct=reserved_adj_preferred_pct if state
+> =="Karnataka" & year<1995
+(6 real changes made)
+
+. by state: gen years_rsvd_adj_preferred_pct=sum(reservedYN_adj_preferred_
+> pct)
+
+. 
+. 
+. replace reserved = 1 if rank==1 & (state=="Andhra Pradesh" | state=="Wes
+> t Bengal" | state=="Karnataka")
+(3 real changes made)
+
+. replace reserved = reserved[_n-1] if state==state[_n-1] & election==. & 
+> year==year[_n-1]+1
+(667 real changes made)
+
+. drop rank
+
+. assert reserved!=.
+
+. g reservedYN=reserved!=0
+
+. by state: gen years_rsvd=sum(reservedYN)
+
+. 
+. rename reserved reserved_electionnum 
+
+. 
+. drop election
+
+. label var reserved_electionnum "Current Reserved Election Number"
+
+. label var reservedYN "Currently Reserved-YN"
+
+. label var years_rsvd "Current Cumulative Years of Reserved Elections"
+
+. label var years_rel_PR "Years relative to first Panchayati Raj Election"
+
+. 
+. 
+. g newadd=0
+
+. replace newadd=1 if state=="A & N Islands" | state=="Chandigarh" | state
+> =="Dadra & Nagar Haveli" | state=="Daman & Diu" | state=="Delhi" | state
+> =="Jammu & Kashmir" | state=="Lakshadweep" | state=="Meghalaya" | state=
+> ="Mizoram" | state=="Nagaland" | state=="Pondicherry"
+(248 real changes made)
+
+. tab state newadd
+
+                     |        newadd
+               State |         0          1 |     Total
+---------------------+----------------------+----------
+       A & N Islands |         0         22 |        22 
+      Andhra Pradesh |        22          0 |        22 
+   Arunachal Pradesh |        22          0 |        22 
+               Assam |        22          0 |        22 
+               Bihar |        22          0 |        22 
+          Chandigarh |         0         22 |        22 
+        Chhattisgarh |        22          0 |        22 
+Dadra & Nagar Haveli |         0         22 |        22 
+         Daman & Diu |         0         22 |        22 
+               Delhi |         0         23 |        23 
+                 Goa |        22          0 |        22 
+             Gujarat |        22          0 |        22 
+             Haryana |        22          0 |        22 
+    Himachal Pradesh |        22          0 |        22 
+     Jammu & Kashmir |         0         23 |        23 
+           Jharkhand |        22          0 |        22 
+           Karnataka |        22          0 |        22 
+              Kerala |        22          0 |        22 
+         Lakshadweep |         0         22 |        22 
+      Madhya Pradesh |        22          0 |        22 
+         Maharashtra |        22          0 |        22 
+             Manipur |        22          0 |        22 
+           Meghalaya |         0         23 |        23 
+             Mizoram |         0         23 |        23 
+            Nagaland |         0         23 |        23 
+              Orissa |        22          0 |        22 
+         Pondicherry |         0         23 |        23 
+              Punjab |        22          0 |        22 
+           Rajasthan |        22          0 |        22 
+              Sikkim |        22          0 |        22 
+          Tamil Nadu |        22          0 |        22 
+             Tripura |        22          0 |        22 
+       Uttar Pradesh |        22          0 |        22 
+         Uttaranchal |        22          0 |        22 
+         West Bengal |        22          0 |        22 
+---------------------+----------------------+----------
+               Total |       528        248 |       776 
+
+
+. 
+. replace state=upper(state)
+(776 real changes made)
+
+. replace years_rel_PR = . if noresvs==1
+(138 real changes made, 138 to missing)
+
+. drop if year==2012
+(6 observations deleted)
+
+. *rename state state_ORIGINAL
+. save "$work/Reserved Elections Data_By StateYear.dta", replace
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//Reserved Elect
+> ions Data_By StateYear.dta saved
+
+. 
+. 
+. use "$intdata/ASINSS_AppendedMaster_CleanFlagged.dta", clear
+
+. 
+. /***********************        LIST OF FLAGS IN DATA
+> output_per_worker_flag
+> NSS_toobig_flag
+> emp_outlier_flag
+> services_flag
+> state_sample_flag
+> null_totalemployees_flag
+> no_totalemployees_flag
+> neg_totalemployees_flag
+> null_totaloutput_flag
+> no_totaloutput_flag
+> neg_totaloutput_flag
+> null_totalrawmaterials_flag
+> no_totalrawmaterials_flag
+> neg_totalrawmaterials_flag
+> null_totalfixedassets_flag
+> no_totalfixedassets_flag
+> neg_totalfixedassets_flag
+> high_output_flag
+> */
+. **********************
+. 
+. /*THIS SET STILL OK
+> output_per_worker_flag
+> emp_outlier_flag
+> services_flag
+> high_output_flag
+> no_totalemployees_flag
+> null_totaloutput_flag
+> no_totaloutput_flag
+> */
+. 
+. /*DO NOT APPLY THESE
+> NSS_toobig_flag
+> state_sample_flag
+> null_totalrawmaterials_flag
+> no_totalrawmaterials_flag
+> neg_totalrawmaterials_flag
+> null_totalfixedassets_flag
+> no_totalfixedassets_flag
+> Ineffective for NSS:
+> neg_totalfixedassets_flag
+> neg_totaloutput_flag
+> null_totalemployees_flag
+> neg_totalemployees_flag
+> */
+. 
+. g anyflg=0
+
+. foreach var of varlist output_per_worker_flag emp_outlier_flag services_
+> flag high_output_flag no_totalemployees_flag null_totaloutput_flag no_to
+> taloutput_flag {
+  2. tab dataset `var'
+  3. replace anyflg=1 if `var'==1
+  4. }
+
+           | output_per_worker_fla
+           |           g
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    53,872        116 |    53,988 
+   ASI2000 |    30,971        160 |    31,131 
+   ASI2005 |    43,418        320 |    43,738 
+   NSS1994 |   192,028          1 |   192,029 
+   NSS2000 |   222,525          4 |   222,529 
+   NSS2005 |    82,852         45 |    82,897 
+-----------+----------------------+----------
+     Total |   625,666        646 |   626,312 
+
+(646 real changes made)
+
+           | emp_outlie
+           |   r_flag
+   dataset |         0 |     Total
+-----------+-----------+----------
+   ASI1994 |    53,988 |    53,988 
+   ASI2000 |    31,131 |    31,131 
+   ASI2005 |    43,738 |    43,738 
+   NSS1994 |   192,029 |   192,029 
+   NSS2000 |   222,529 |   222,529 
+   NSS2005 |    82,897 |    82,897 
+-----------+-----------+----------
+     Total |   626,312 |   626,312 
+
+(0 real changes made)
+
+           |     services_flag
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    50,008      3,980 |    53,988 
+   ASI2000 |    29,565      1,566 |    31,131 
+   ASI2005 |    41,362      2,376 |    43,738 
+   NSS1994 |   162,077     29,952 |   192,029 
+   NSS2000 |   221,841        688 |   222,529 
+   NSS2005 |    82,685        212 |    82,897 
+-----------+----------------------+----------
+     Total |   587,538     38,774 |   626,312 
+
+(38774 real changes made)
+
+           |   high_output_flag
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    42,904     11,084 |    53,988 
+   ASI2000 |    25,784      5,347 |    31,131 
+   ASI2005 |    35,550      8,188 |    43,738 
+   NSS1994 |   162,018     30,011 |   192,029 
+   NSS2000 |   221,836        693 |   222,529 
+   NSS2005 |    82,030        867 |    82,897 
+-----------+----------------------+----------
+     Total |   570,122     56,190 |   626,312 
+
+(17350 real changes made)
+
+           | no_totalemployees_fla
+           |           g
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    53,978         10 |    53,988 
+   ASI2000 |    31,128          3 |    31,131 
+   ASI2005 |    43,738          0 |    43,738 
+   NSS1994 |   186,737      5,292 |   192,029 
+   NSS2000 |   222,529          0 |   222,529 
+   NSS2005 |    82,867         30 |    82,897 
+-----------+----------------------+----------
+     Total |   620,977      5,335 |   626,312 
+
+(5103 real changes made)
+
+           | null_totaloutput_flag
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    42,929     11,059 |    53,988 
+   ASI2000 |    25,831      5,300 |    31,131 
+   ASI2005 |    35,629      8,109 |    43,738 
+   NSS1994 |   162,018     30,011 |   192,029 
+   NSS2000 |   221,836        693 |   222,529 
+   NSS2005 |    82,030        867 |    82,897 
+-----------+----------------------+----------
+     Total |   570,273     56,039 |   626,312 
+
+(0 real changes made)
+
+           |  no_totaloutput_flag
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    53,929         59 |    53,988 
+   ASI2000 |    31,067         64 |    31,131 
+   ASI2005 |    43,585        153 |    43,738 
+   NSS1994 |   191,834        195 |   192,029 
+   NSS2000 |   221,179      1,350 |   222,529 
+   NSS2005 |    82,881         16 |    82,897 
+-----------+----------------------+----------
+     Total |   624,475      1,837 |   626,312 
+
+(1828 real changes made)
+
+. 
+. 
+. tab dataset anyflg
+
+           |        anyflg
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    42,733     11,255 |    53,988 
+   ASI2000 |    25,578      5,553 |    31,131 
+   ASI2005 |    35,112      8,626 |    43,738 
+   NSS1994 |   156,754     35,275 |   192,029 
+   NSS2000 |   220,482      2,047 |   222,529 
+   NSS2005 |    81,952        945 |    82,897 
+-----------+----------------------+----------
+     Total |   562,611     63,701 |   626,312 
+
+
+. drop if anyflg
+(63701 observations deleted)
+
+.         drop anyflg
+
+. 
+. 
+. *collapse (sum) plants-fixedcapitalformation selfemp_estab selfemp_emp n
+> ew_estab_uniplant new_emp_uniplant singleunit informal_emp new_emp infor
+> mal_estab formal_estab new_estab new_estab_informal new_estab_formal sma
+> ll_emp small_estab female_estab female_emp male_estab male_emp, by (  ye
+> ar state state_ORIGINAL district ruralurban organization ownership locat
+> ion nic304 nic404 nic3description nic204 nic2desc  fsize*  under3 enttyp
+> e)
+. keep plants-fixedcapitalformation totalunpaidemp multiplier year state s
+> tate_ORIGINAL district ruralurban organization ownership location nic304
+>  nic404 nic204 under3 age enttype ruralurban survey traditional_loan int
+> erestamount typecontract source* dest* 
+
+. 
+. compress
+
+. 
+. 
+. *****keep cleaning up state names
+. replace state_ORIG=upper(state_ORIG)
+(459188 real changes made)
+
+. replace state_ORIG="A & N ISLANDS" if state_ORIG=="ANDAMAN AND NICOBAR I
+> SLANDS"
+(48 real changes made)
+
+. replace state_ORIG="CHHATTISGARH" if state_ORIG=="CHHATISGARH"
+(937 real changes made)
+
+. replace state_ORIG="DADRA & NAGAR HAVELI" if state_ORIG=="DADRA  AND  NA
+> GAR  HAVELI"
+(871 real changes made)
+
+. replace state_ORIG="DAMAN & DIU" if state_ORIG=="DAMAN  &  DIU "
+(1017 real changes made)
+
+. replace state_ORIG="MAHARASHTRA" if state_ORIG=="MAHARASTRA"
+(33577 real changes made)
+
+. replace state_ORIG="PONDICHERRY" if state_ORIG=="PONDICHERI"
+(939 real changes made)
+
+. 
+. 
+. bys survey: tab state_ORIG year
+
+--------------------------------------------------------------------------
+-> survey = ASI
+
+                      |               year
+       state_ORIGINAL |      1994       2000       2005 |     Total
+----------------------+---------------------------------+----------
+        A & N ISLANDS |        27         15          6 |        48 
+       ANDHRA PRADESH |     3,483      1,860      2,873 |     8,216 
+                ASSAM |       735        568        689 |     1,992 
+                BIHAR |     1,164        376        483 |     2,023 
+           CHANDIGARH |       269        115        159 |       543 
+         CHHATTISGARH |         0        394        543 |       937 
+ DADRA & NAGAR HAVELI |       153        287        431 |       871 
+          DAMAN & DIU |       213        315        489 |     1,017 
+                DELHI |     1,569        719        822 |     3,110 
+                  GOA |       214        256        325 |       795 
+              GUJARAT |     4,356      2,187      3,190 |     9,733 
+              HARYANA |     1,706      1,157      1,434 |     4,297 
+     HIMACHAL PRADESH |       269        239        496 |     1,004 
+      JAMMU & KASHMIR |       244        185        343 |       772 
+            JHARKHAND |         0        381        494 |       875 
+            KARNATAKA |     2,206      1,467      1,854 |     5,527 
+               KERALA |     1,581        975      1,101 |     3,657 
+       MADHYA PRADESH |     1,716        794        878 |     3,388 
+          MAHARASHTRA |     5,515      3,021      4,234 |    12,770 
+              MANIPUR |        45         23         35 |       103 
+            MEGHALAYA |        23         24         57 |       104 
+             NAGALAND |        54         78         66 |       198 
+               ORISSA |       848        461        597 |     1,906 
+          PONDICHERRY |       217        240        322 |       779 
+               PUNJAB |     2,501      1,403      2,485 |     6,389 
+            RAJASTHAN |     1,819      1,031      1,518 |     4,368 
+           TAMIL NADU |     5,035      3,211      4,116 |    12,362 
+              TRIPURA |        88        160        239 |       487 
+        UTTAR PRADESH |     4,431      1,979      2,790 |     9,200 
+          UTTARANCHAL |         0        319        447 |       766 
+          WEST BENGAL |     2,252      1,338      1,596 |     5,186 
+----------------------+---------------------------------+----------
+                Total |    42,733     25,578     35,112 |   103,423 
+
+
+--------------------------------------------------------------------------
+-> survey = NSS
+
+                      |               year
+       state_ORIGINAL |      1994       2000       2005 |     Total
+----------------------+---------------------------------+----------
+        A & N ISLANDS |       534        582        219 |     1,335 
+       ANDHRA PRADESH |    14,438     17,527      6,483 |    38,448 
+    ARUNACHAL PRADESH |       211        156        101 |       468 
+                ASSAM |     3,381      6,007      2,870 |    12,258 
+                BIHAR |    11,799     12,155      3,806 |    27,760 
+           CHANDIGARH |       288        330         56 |       674 
+         CHHATTISGARH |         0      2,920        866 |     3,786 
+ DADRA & NAGAR HAVELI |       176        221        117 |       514 
+          DAMAN & DIU |       147        204        154 |       505 
+                DELHI |     1,654      2,002        555 |     4,211 
+                  GOA |       349        793        260 |     1,402 
+              GUJARAT |     6,188      9,660      3,487 |    19,335 
+              HARYANA |     1,736      4,091      2,126 |     7,953 
+     HIMACHAL PRADESH |     1,962      3,787      1,489 |     7,238 
+      JAMMU & KASHMIR |     1,192      5,825      2,513 |     9,530 
+            JHARKHAND |         0      5,367      1,767 |     7,134 
+            KARNATAKA |     7,750      8,599      3,431 |    19,780 
+               KERALA |     5,565     10,106      3,963 |    19,634 
+          LAKSHADWEEP |        17         71         77 |       165 
+       MADHYA PRADESH |     6,009     10,638      3,736 |    20,383 
+          MAHARASHTRA |     8,462     18,711      6,404 |    33,577 
+              MANIPUR |     1,676      3,426      1,160 |     6,262 
+            MEGHALAYA |       655      1,045        540 |     2,240 
+              MIZORAM |       394      1,215        453 |     2,062 
+             NAGALAND |     1,034      1,506        693 |     3,233 
+               ORISSA |     7,533      6,853      3,248 |    17,634 
+          PONDICHERRY |       110        516        313 |       939 
+               PUNJAB |     3,682      9,570      2,992 |    16,244 
+            RAJASTHAN |     4,745     10,094      4,450 |    19,289 
+               SIKKIM |        96        269        262 |       627 
+           TAMIL NADU |    22,770     19,093      6,567 |    48,430 
+              TRIPURA |     2,544      3,565      1,600 |     7,709 
+        UTTAR PRADESH |    20,866     24,750      8,084 |    53,700 
+          UTTARANCHAL |         0      1,507        555 |     2,062 
+          WEST BENGAL |    18,791     17,321      6,555 |    42,667 
+----------------------+---------------------------------+----------
+                Total |   156,754    220,482     81,952 |   459,188 
+
+
+
+. 
+. merge m:1 state year using "$work/Reserved Elections Data_By StateYear.d
+> ta"
+year was int now float
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                           674
+        from master                         0  (_merge==1)
+        from using                        674  (_merge==2)
+
+    matched                           562,611  (_merge==3)
+    -----------------------------------------
+
+.         drop if _m==2
+(674 observations deleted)
+
+.         assert _m==3
+
+.         drop _merge
+
+. 
+. 
+. save "$intdata\ASINSS_Summary.dta", replace
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata/\ASIN
+> SS_Summary.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata/\ASINSS_Summ
+> ary.dta saved
+
+. 
+. 
+. rename totalemployees totalpersonsengaged
+
+. 
+. foreach var of varlist plants totalpersonsengaged totaloutput loanamount
+>  totalfixedassets totalrawmaterials  Memployees Femployees{
+  2. replace `var'=`var'*multiplier
+  3. }
+(510103 real changes made)
+(510083 real changes made)
+(510110 real changes made)
+(94741 real changes made)
+(499526 real changes made)
+(500557 real changes made)
+(428214 real changes made)
+(226155 real changes made)
+
+. 
+. g origsize=totalpersonsengaged/multiplier
+(58 missing values generated)
+
+. 
+. g start=.
+(562611 missing values generated)
+
+. 
+. g f_plants_new=plants if under3==1 & organization=="F_Individual Proprie
+> torship"
+(549502 missing values generated)
+
+. g f_plants_old=plants if under3==0 & organization=="F_Individual Proprie
+> torship"
+(489459 missing values generated)
+
+. g f_plants=plants if organization=="F_Individual Proprietorship"
+(476350 missing values generated)
+
+. g f_emp_new=totalpersonsengaged if under3==1 & organization=="F_Individu
+> al Proprietorship"
+(549502 missing values generated)
+
+. g f_emp_old=totalpersonsengaged if under3==0 & organization=="F_Individu
+> al Proprietorship"
+(489459 missing values generated)
+
+. g f_emp=totalpersonsengaged if organization=="F_Individual Proprietorshi
+> p"
+(476350 missing values generated)
+
+. g f_output=totaloutput if organization=="F_Individual Proprietorship"
+(476350 missing values generated)
+
+. g f_assets=totalfixedassets if organization=="F_Individual Proprietorshi
+> p"
+(477093 missing values generated)
+
+. g f_rawmat=totalrawmaterials if organization=="F_Individual Proprietorsh
+> ip"
+(478539 missing values generated)
+
+. g f_workers = Femployees
+(44130 missing values generated)
+
+. g f_workers_m_plt = Femployees if organization=="M_Individual Proprietor
+> ship"
+(208358 missing values generated)
+
+. g f_workers_f_plt = Femployees if organization=="F_Individual Proprietor
+> ship"
+(476350 missing values generated)
+
+. g f_loanamount = loanamount if organization=="F_Individual Proprietorshi
+> p"
+(558891 missing values generated)
+
+. 
+. g f_newpl_HH = plants if under3==1 &  organization=="F_Individual Propri
+> etorship" & location=="Household"
+(551125 missing values generated)
+
+. g f_oldpl_HH = plants if under3==0 &  organization=="F_Individual Propri
+> etorship" & location=="Household"
+(497209 missing values generated)
+
+. g f_newpl_NHH = plants if under3==1 &  organization=="F_Individual Propr
+> ietorship" & location=="Non-Household"
+(560996 missing values generated)
+
+. g f_oldpl_NHH = plants if under3==0 &  organization=="F_Individual Propr
+> ietorship" & location=="Non-Household"
+(554899 missing values generated)
+
+. 
+. 
+. g m_plants_new=plants if under3==1 & organization=="M_Individual Proprie
+> torship"
+(518656 missing values generated)
+
+. g m_plants_old=plants if under3==0 & organization=="M_Individual Proprie
+> torship"
+(252313 missing values generated)
+
+. g m_plants=plants if organization=="M_Individual Proprietorship"
+(208358 missing values generated)
+
+. g m_emp_new=totalpersonsengaged if under3==1 & organization=="M_Individu
+> al Proprietorship"
+(518656 missing values generated)
+
+. g m_emp_old=totalpersonsengaged if under3==0 & organization=="M_Individu
+> al Proprietorship"
+(252313 missing values generated)
+
+. g m_emp=totalpersonsengaged if organization=="M_Individual Proprietorshi
+> p"
+(208358 missing values generated)
+
+. g m_output=totaloutput if organization=="M_Individual Proprietorship"
+(208358 missing values generated)
+
+. g m_assets=totalfixedassets if organization=="M_Individual Proprietorshi
+> p"
+(209857 missing values generated)
+
+. g m_rawmat=totalrawmaterials if organization=="M_Individual Proprietorsh
+> ip"
+(209906 missing values generated)
+
+. g m_workers = Memployees
+(3926 missing values generated)
+
+. g m_workers_m_plt = Memployees if organization=="M_Individual Proprietor
+> ship"
+(208358 missing values generated)
+
+. g m_workers_f_plt = Memployees if organization=="F_Individual Proprietor
+> ship"
+(476350 missing values generated)
+
+. 
+. g m_newpl_HH = plants if under3==1 &  organization=="M_Individual Propri
+> etorship" & location=="Household"
+(545924 missing values generated)
+
+. g m_oldpl_HH = plants if under3==0 &  organization=="M_Individual Propri
+> etorship" & location=="Household"
+(390550 missing values generated)
+
+. g m_newpl_NHH = plants if under3==1 &  organization=="M_Individual Propr
+> ietorship" & location=="Non-Household"
+(535426 missing values generated)
+
+. g m_oldpl_NHH = plants if under3==0 &  organization=="M_Individual Propr
+> ietorship" & location=="Non-Household"
+(424727 missing values generated)
+
+. 
+. g f_gov_source = plants if (sourceagency1==1 | sourceagency2==1) &  orga
+> nization=="F_Individual Proprietorship"
+(562404 missing values generated)
+
+. g f_gov_dest = plants if (destagency1==1 | destagency2==1) &  organizati
+> on=="F_Individual Proprietorship"
+(562376 missing values generated)
+
+. g f_gov_dest_new = plants if (destagency1==1 | destagency2==1) &  organi
+> zation=="F_Individual Proprietorship" & under3==1
+(562581 missing values generated)
+
+. 
+. g m_gov_source = plants if (sourceagency1==1 | sourceagency2==1) &  orga
+> nization=="M_Individual Proprietorship"
+(561053 missing values generated)
+
+. g m_gov_dest = plants if (destagency1==1 | destagency2==1) &  organizati
+> on=="M_Individual Proprietorship"
+(561190 missing values generated)
+
+. g m_gov_dest_new = plants if (destagency1==1 | destagency2==1) &  organi
+> zation=="M_Individual Proprietorship" & under3==1
+(562550 missing values generated)
+
+. 
+. g f_plants_new_loan = plants if under3==1 & organization=="F_Individual 
+> Proprietorship" & loanamount>0 & loanamount!=.
+(561775 missing values generated)
+
+. g m_plants_new_loan = plants if under3==1 & organization=="M_Individual 
+> Proprietorship" & loanamount>0 & loanamount!=.
+(554434 missing values generated)
+
+. 
+. g f_plants_new_noloan = plants if under3==1 & organization=="F_Individua
+> l Proprietorship" & (loanamount==0 | loanamount==.)
+(550338 missing values generated)
+
+. g m_plants_new_noloan = plants if under3==1 & organization=="M_Individua
+> l Proprietorship" & (loanamount==0 | loanamount==.)
+(526833 missing values generated)
+
+. 
+. 
+. 
+. g m_workers_ORG = m_workers if survey=="ASI"
+(463114 missing values generated)
+
+. g f_workers_ORG = f_workers if survey=="ASI"
+(503318 missing values generated)
+
+. 
+. 
+. g f_plants_new_lt3=plants if under3==1 & organization=="F_Individual Pro
+> prietorship" & survey=="NSS" & origsize<=3
+(550268 missing values generated)
+
+. g f_plants_new_gt4=plants if under3==1 & organization=="F_Individual Pro
+> prietorship" & survey=="NSS" & origsize>=4 & origsize !=.
+(561927 missing values generated)
+
+. 
+. g m_plants_new_lt3=plants if under3==1 & organization=="M_Individual Pro
+> prietorship" & survey=="NSS" & origsize<=3
+(531248 missing values generated)
+
+. g m_plants_new_gt4=plants if under3==1 & organization=="M_Individual Pro
+> prietorship" & survey=="NSS" & origsize>=4 & origsize !=.
+(550801 missing values generated)
+
+. 
+. g end=.
+(562611 missing values generated)
+
+. collapse (sum) totalpersonsengaged loanamount totaloutput start-end ///
+> , by(state nic304 survey year reserved_electionnum reservedYN reservedYN
+> * years_rsvd years_rel_PR expected_base expected_fill)
+
+. 
+. order m_workers_ORG f_workers_ORG, after(end)
+
+. 
+. ***CLEAN OUT EXISTING ASI DATA FOR COLLAPSE
+. foreach i of varlist start-end loanamount totaloutput {
+  2. replace `i' = . if survey=="ASI"
+  3. }
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+(3341 real changes made, 3341 to missing)
+
+. 
+. ***COLLAPSE DOWN TO STATE YEAR
+. collapse (sum) totalpersonsengaged loanamount totaloutput start-end  m_w
+> orkers_ORG f_workers_ORG ///
+> , by(state nic304 year reserved_electionnum reservedYN reservedYN* years
+> _rsvd years_rel_PR expected_base expected_fill)
+
+. 
+. 
+. foreach i of varlist f_plants_new f_plants f_emp_new f_emp f_output f_wo
+> rkers f_workers_m_plt ///
+> m_plants_new m_plants m_emp_new m_emp m_output m_workers m_workers_m_plt
+>   m_workers_ORG f_workers_ORG f_plants_old m_plants_old f_workers_f_plt 
+> m_workers_f_plt f_emp_old m_emp_old f_newpl_HH f_oldpl_HH f_newpl_NHH f_
+> oldpl_NHH m_newpl_HH m_oldpl_HH m_newpl_NHH m_oldpl_NHH f_gov_dest_new m
+> _gov_dest_new f_plants_new_loan m_plants_new_loan f_plants_new_noloan m_
+> plants_new_noloan f_plants_new_lt3 f_plants_new_gt4 m_plants_new_lt3 m_p
+> lants_new_gt4 ///
+> {
+  2. g ln_`i' = ln(`i'+1)
+  3. }
+
+. 
+. 
+. 
+. 
+. foreach i in f m {
+  2. g ln_`i'_avg_size=ln(`i'_emp/`i'_plants)
+  3. g ln_`i'_labor_prod=ln(`i'_output/`i'_emp)
+  4. g ln_`i'_GVA=ln((`i'_output-`i'_rawmat)/`i'_emp)
+  5. g ln_`i'_cap_intens=ln(`i'_assets /`i'_emp)
+  6. }
+(2302 missing values generated)
+(2302 missing values generated)
+(2303 missing values generated)
+(2325 missing values generated)
+(806 missing values generated)
+(806 missing values generated)
+(810 missing values generated)
+(843 missing values generated)
+
+. 
+. g emp1994 = totalpersonsengaged if year==1994
+(2739 missing values generated)
+
+. egen _1994emp4wgt = sum(emp1994 ), by(state nic304)
+
+. 
+. g ln_st_emp_wgt_ind1994=ln(_1994emp4wgt)
+(395 missing values generated)
+
+. drop _1994emp4wgt emp1994 
+
+. *replace ln_st_emp_wgt = 0 if ln_st_emp_wgt<0 //cant have negative weigh
+> ts (created by the log)
+. drop if ln_st_emp_wgt<=0 
+(3 observations deleted)
+
+. ******
+. **SET 1994 CONDITIONS ON ALL OBS FOR STATE INDUSTRY
+. ******
+. g HH_plants = f_newpl_HH +f_oldpl_HH +m_newpl_HH +m_oldpl_HH 
+
+. g f_HH_plants = f_newpl_HH +f_oldpl_HH 
+
+. 
+. foreach i in f_plants_new f_plants f_emp_new f_emp f_output ///
+> f_rawmat f_assets f_workers f_workers_m_plt f_workers_ORG f_plants_old f
+> _workers_f_plt m_plants_new m_plants loanamount f_loanamount totaloutput
+>  HH_plants f_HH_plants ///
+> m_emp_new m_emp m_output ///
+> m_rawmat m_assets m_workers m_workers_m_plt m_workers_ORG m_plants_old m
+> _workers_f_plt ///
+> {
+  2. g `i'_1994 = `i' if year==1994
+  3. egen `i'_1994ind = sum(`i'_1994), by(nic304)
+  4. drop `i'_1994
+  5. }
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+(2738 missing values generated)
+
+. 
+. 
+. foreach i in f_gov_source f_gov_dest  m_gov_source m_gov_dest f_plants m
+> _plants {
+  2. g `i'_2000 = `i' if year==2000
+  3. egen `i'_2000ind = sum(`i'_2000), by(nic304)
+  4. drop `i'_2000
+  5. }
+(2669 missing values generated)
+(2669 missing values generated)
+(2669 missing values generated)
+(2669 missing values generated)
+(2669 missing values generated)
+(2669 missing values generated)
+
+. 
+. 
+. 
+. g f_avg_size_1994=ln(f_emp_1994ind/f_plants_1994ind)
+(783 missing values generated)
+
+.         g avg_size_1994 =ln((f_emp_1994ind+m_emp_1994ind)/(f_plants_1994
+> ind+m_plants_1994ind))
+(145 missing values generated)
+
+. g f_labor_prod_1994=ln(f_output_1994ind/f_emp_1994ind)
+(783 missing values generated)
+
+.         g labor_prod_1994 = ln((f_output_1994ind+m_output_1994ind)/(f_em
+> p_1994ind+m_emp_1994ind))
+(145 missing values generated)
+
+. g f_GVA_1994=ln((f_output_1994ind-f_rawmat_1994ind)/f_emp_1994ind)
+(783 missing values generated)
+
+.         g GVA_1994 = ln((f_output_1994ind+m_output_1994ind-f_rawmat_1994
+> ind-m_rawmat_1994ind)/(f_emp_1994ind+m_emp_1994ind))
+(145 missing values generated)
+
+. g f_cap_intens_1994=ln((f_assets_1994ind+1)/f_emp_1994ind)
+(783 missing values generated)
+
+.         g cap_intens_1994 =ln((f_assets_1994ind+m_assets_1994ind+1)/(f_e
+> mp_1994ind+m_emp_1994ind))
+(145 missing values generated)
+
+. g f_share_pl_1994 = ln((f_plants_1994ind+1)/(f_plants_1994ind+m_plants_1
+> 994ind))
+(145 missing values generated)
+
+. g f_share_ent_1994 = ln((f_plants_new_1994ind+1)/(f_plants_new_1994ind+m
+> _plants_new_1994ind))
+(193 missing values generated)
+
+. g f_fin_intens_1994 = ln((f_loanamount_1994ind+1)/(f_output_1994ind +1))
+
+. g fin_intens_1994 = ln(loanamount_1994ind/totaloutput_1994ind+1)
+(145 missing values generated)
+
+. 
+. g f_gov_source_2000 = ln((f_gov_source_2000ind+1)/f_plants_2000ind)
+(247 missing values generated)
+
+. g f_gov_dest_2000 = ln((f_gov_dest_2000ind+1)/f_plants_2000ind)
+(247 missing values generated)
+
+. 
+. g m_gov_source_2000 = ln((m_gov_source_2000ind+1)/m_plants_2000ind)
+(1 missing value generated)
+
+. g m_gov_dest_2000 = ln((m_gov_dest_2000ind+1)/m_plants_2000ind)
+(1 missing value generated)
+
+. 
+. g gov_source_2000 = ln((f_gov_source_2000ind+m_gov_source_2000ind+1)/(m_
+> plants_2000ind+f_plants_2000ind))
+(1 missing value generated)
+
+. g gov_dest_2000 = ln((f_gov_dest_2000ind+m_gov_dest_2000ind+1)/(m_plants
+> _2000ind+f_plants_2000ind))
+(1 missing value generated)
+
+. 
+.  
+. g share_HH_1994 = ln((HH_plants_1994ind+1)/(f_plants_1994ind+m_plants_19
+> 94ind))
+(145 missing values generated)
+
+. g f_share_HH_1994 = ln((f_HH_plants_1994ind+1)/(f_plants_1994ind+m_plant
+> s_1994ind))
+(145 missing values generated)
+
+. 
+. g f_share_pl_1994_raw = (f_plants_1994ind)/(f_plants_1994ind+m_plants_19
+> 94ind)
+(145 missing values generated)
+
+. g share_HH_1994_raw = (HH_plants_1994ind)/(f_plants_1994ind+m_plants_199
+> 4ind)
+(145 missing values generated)
+
+. g f_share_HH_1994_raw = (f_HH_plants_1994ind)/(f_plants_1994ind+m_plants
+> _1994ind)
+(145 missing values generated)
+
+. 
+. 
+. g ln_f_share_pl_1994= ln(f_share_pl_1994+1)
+(3773 missing values generated)
+
+. g ln_f_share_ent_1994= ln(f_share_ent_1994+1)
+(3769 missing values generated)
+
+. sum f_share_pl_1994 , d
+
+                       f_share_pl_1994
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%    -8.609671      -8.609671
+ 5%    -8.045655      -8.609671
+10%    -7.285136      -8.609671       Obs                3857
+25%      -4.5221      -8.609671       Sum of Wgt.        3857
+
+50%    -3.022989                      Mean          -3.509872
+                        Largest       Std. Dev.      2.079075
+75%    -2.039074      -.3805301
+90%    -1.033025      -.3805301       Variance       4.322554
+95%     -.837177      -.3805301       Skewness      -.8153151
+99%    -.3805301      -.3805301       Kurtosis       2.931809
+
+. 
+. egen cut33= pctile(f_share_pl_1994),p(33)
+
+. egen cut67= pctile(f_share_pl_1994),p(67)
+
+. 
+. g plantshare_mid3rd =f_share_pl_1994>=cut33&f_share_pl_1994<cut67
+
+. g plantshare_top3rd =f_share_pl_1994>=cut67 & f_share_pl_1994!=.
+
+. 
+. drop cut33 cut67
+
+. egen cut33= pctile(f_share_HH_1994),p(33)
+
+. egen cut67= pctile(f_share_HH_1994),p(67)
+
+. 
+. g plantshare_mid3rd_HH =f_share_HH_1994>=cut33&f_share_HH_1994<cut67
+
+. g plantshare_top3rd_HH =f_share_HH_1994>=cut67 & f_share_HH_1994!=.
+
+. 
+. 
+. egen stateyear = group(state year)
+
+. egen stateindustry = group(state nic304)
+
+. 
+. 
+. 
+. foreach i in f_share_pl_1994 share_HH_1994 f_share_HH_1994 f_avg_size_19
+> 94 f_GVA_1994 f_cap_intens_1994  f_fin_intens_1994 f_share_pl_1994_raw s
+> hare_HH_1994_raw f_share_HH_1994_raw {
+  2. egen `i'_std=std(`i')
+  3. }
+(145 missing values generated)
+(145 missing values generated)
+(145 missing values generated)
+(783 missing values generated)
+(783 missing values generated)
+(783 missing values generated)
+(145 missing values generated)
+(145 missing values generated)
+(145 missing values generated)
+
+. 
+. compress
+year was float now int
+reserved_electionnum was float now byte
+years_rel_PR was float now byte
+reservedYN_73rdDef was float now byte
+expected_base was float now byte
+expected_fill was float now byte
+reservedYN_adj_preferred was float now byte
+reservedYN was float now byte
+years_rsvd was float now byte
+plantshare_mid3rd was float now byte
+plantshare_top3rd was float now byte
+plantshare_mid3rd_HH was float now byte
+plantshare_top3rd_HH was float now byte
+stateyear was float now byte
+stateindustry was float now int
+start was double now byte
+end was double now byte
+
+. 
+. label data "GKO (JDE 2014) - Political Reservations - Replication Datase
+> t"
+
+. 
+. save "$finaldata/ASINSS_st_ind_yr_analysisdataset.dta", replace
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/6finaldata//ASINSS_st
+> _ind_yr_analysisdataset.dta saved
+
+. 
+end of do-file

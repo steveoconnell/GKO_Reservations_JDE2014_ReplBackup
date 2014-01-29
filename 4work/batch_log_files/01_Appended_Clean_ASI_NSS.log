@@ -1,0 +1,1801 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   11.2   Copyright 1985-2009 StataCorp LP
+  Statistics/Data Analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        http://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Single-user 4-core Stata perpetual license:
+       Serial number:  50110563506
+         Licensed to:  Stephen O'Connell
+                       City University of New York
+
+Notes:
+      1.  (/m# option or -set memory-) 2048.00 MB allocated to data
+      2.  (/v# option or -set maxvar-) 5000 maximum variables
+      3.  Stata running in batch mode
+
+. do ..\..\2progs\01_Appended_Clean_ASI_NSS.do 
+
+. ************************************************************************
+. ***************Ghani - Kerr - O'Connell                  ***************
+> ********
+. ***************Political Reservations and Women's Entrepreneuship*******
+. ***************Journal of Development Economics, 2014 ******************
+. ***************Replication Backup                                *******
+> ****************
+. ************************************************************************
+. clear
+
+. clear matrix
+
+. clear mata
+
+. cap log close
+
+. 
+. global root "C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup"
+
+. include "$root/2progs/00_Set_paths.do"
+
+. version 11.0
+
+. dis "$root"
+C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup
+
+. assert "$root" !="" //assert root capture worked for user
+
+. global data "$root/1data/"
+
+. global do "$root/2progs/"
+
+. global figures "$root/3figures/"
+
+. global work "$root/4work/"
+
+. global intdata "$root/5intdata/"
+
+. global finaldata "$root/6finaldata/"
+
+. global date=c(current_date)
+
+. global time=subinstr(c(current_time),":","",.)
+
+. cd "$work" //default directory to put files, although all outputs should
+>  be directed via a global macro
+C:\OpenCode\GKO_Reservations_JDE2014_ReplBackup\4work
+
+. set seed 99
+
+. set mem 2g, perm
+
+Current memory allocation
+
+                    current                                 memory usage
+    settable          value     description                 (1M = 1024k)
+    --------------------------------------------------------------------
+    set maxvar         5000     max. variables allowed           1.947M
+    set memory         2048M    max. data space              2,048.000M
+    set matsize         800     max. RHS vars in models          4.950M
+                                                            -----------
+                                                             2,054.897M
+(set memory preference recorded)
+
+. 
+. 
+. ************************************************************************
+. ************************************************************************
+. include "$do/subroutines/Prep_NIC_crosswalk.do"
+
+. clear
+
+. insheet using "$data/Concordances/Crosswalk NIC 87 to 98.csv", clear
+(2 vars, 232 obs)
+
+. 
+. split nic387,p(+)
+variables created as string: 
+nic3871   nic3874   nic3877   nic38710  nic38713  nic38716
+nic3872   nic3875   nic3878   nic38711  nic38714  nic38717
+nic3873   nic3876   nic3879   nic38712  nic38715  nic38718
+
+. drop nic387
+
+. 
+. tempfile temp
+
+. save `temp'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000001.tmp saved
+
+. 
+. local i = 1
+
+. foreach var of varlist nic387* {
+  2. use `temp' , clear
+  3. keep nic498 `var'
+  4. rename `var' nic387
+  5. drop if nic387==""
+  6. tempfile temp`i'
+  7. save `temp`i''
+  8. local max=`i'
+  9. local i=`i'+1
+ 10. }
+(6 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000002.tmp saved
+(145 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000003.tmp saved
+(185 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000004.tmp saved
+(202 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000005.tmp saved
+(212 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000006.tmp saved
+(218 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000007.tmp saved
+(223 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000008.tmp saved
+(225 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t000009.tmp saved
+(226 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000a.tmp saved
+(227 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000b.tmp saved
+(229 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000c.tmp saved
+(230 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000d.tmp saved
+(231 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000e.tmp saved
+(231 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000f.tmp saved
+(231 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000g.tmp saved
+(231 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000h.tmp saved
+(231 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000i.tmp saved
+(231 observations deleted)
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000j.tmp saved
+
+. 
+. local i = 2
+
+. use `temp1', clear
+
+. while `i' <=`max' {
+  2. append using `temp`i''
+  3. local i=`i'+1
+  4. }
+
+. 
+. g length=length(nic387)
+
+. replace nic387=substr(nic387,2,3) if length==4
+(2 real changes made)
+
+. drop length
+
+. replace nic387=substr("000"+nic387,length("000"+nic387)-2,3)
+(2 real changes made)
+
+. tostring nic498, replace
+nic498 was int now str4
+
+. replace nic498=substr("0000"+nic498,length("0000"+nic498)-3,4)
+(52 real changes made)
+
+. rename nic498 nic498a
+
+. 
+. save "$work/NIC8798Crosswalk.dta", replace
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//NIC8798Crosswa
+> lk.dta saved
+
+. 
+. 
+. insheet using "$data/Concordances/Crosswalk NIC 98 to 04.csv", clear
+(4 vars, 159 obs)
+
+. tostring _all, replace
+nic498 was int now str4
+nic404 was int now str4
+nic304 was int now str3
+description already string; no replace
+
+. replace nic498=substr("0000"+nic498,length("0000"+nic498)-3,4)
+(2 real changes made)
+
+. replace nic404=substr("0000"+nic404,length("0000"+nic404)-3,4)
+(1 real change made)
+
+. replace nic304=substr("000"+nic304,length("000"+nic304)-2,3)
+(1 real change made)
+
+. 
+. gsort +nic498 +nic404
+
+. bysort nic498: g rank=_n
+
+. bysort nic498: g rank2=_N
+
+. g keep =1 if rank==1
+(15 missing values generated)
+
+. replace keep =. if rank2>1
+(7 real changes made, 7 to missing)
+
+. replace keep =1 if rank2>1 & nic498==nic404
+(6 real changes made)
+
+. replace keep = 1 if keep==. & rank2>1 & rank==1
+(2 real changes made)
+
+. keep if keep==1
+(14 observations deleted)
+
+. drop rank* keep
+
+. bysort nic498: g rank2=_N
+
+. drop if rank2>1 & nic498!=nic404
+(1 observation deleted)
+
+. drop rank2
+
+. 
+. rename nic404 nic404a
+
+. 
+. save "$work/NIC9804Crosswalk.dta", replace
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work//NIC9804Crosswa
+> lk.dta saved
+
+. 
+. include "$do/subroutines/Prep_industry_deflators.do"
+
+. clear
+
+. use "$data/Deflators/GHK/KarlJandocDeflators_Gupta_Hasan_Kumar_2009.dta"
+> , clear
+
+. g base2005=wpi_nic98_3dig_con if year==2005
+(1715 missing values generated)
+
+. egen baseval=sum(base2005), by (nic98_3dig_con)
+
+. g wpi_deflator=wpi_nic98_3dig_con /baseval
+
+. keep year nic98_3dig_con wpi_deflator
+
+. 
+. rename nic98 nic398
+
+. 
+. 
+. preserve
+
+. use "$work\NIC9804Crosswalk.dta", clear
+
+. keep nic498 nic304
+
+. g nic398=substr(nic498,1,3)
+
+. drop nic498
+
+. duplicates drop
+
+Duplicates in terms of all variables
+
+(67 observations deleted)
+
+. 
+.         bysort nic398: g rank=_N
+
+.         tab rank
+
+       rank |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |         77      100.00      100.00
+------------+-----------------------------------
+      Total |         77      100.00
+
+.         assert rank==1
+
+.         drop rank
+
+. destring nic398, replace
+nic398 has all characters numeric; replaced as int
+
+. tempfile nic3Xwalk
+
+. save `nic3Xwalk'
+file C:\Users\Steve\AppData\Local\Temp\ST_2t00000l.tmp saved
+
+. 
+. restore
+
+. merge m:1 nic398 using `nic3Xwalk'
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                            28
+        from master                         0  (_merge==1)
+        from using                         28  (_merge==2)
+
+    matched                             1,764  (_merge==3)
+    -----------------------------------------
+
+.         tab _m
+
+                 _merge |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+         using only (2) |         28        1.56        1.56
+            matched (3) |      1,764       98.44      100.00
+------------------------+-----------------------------------
+                  Total |      1,792      100.00
+
+.         drop if _m==2
+(28 observations deleted)
+
+.         assert _m==3
+
+.         drop _merge
+
+. 
+. drop nic398
+
+. order nic304 wpi_deflator
+
+. 
+. tempfile industry_deflator
+
+. save "$work\industry_deflator.dta", replace
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/4work/\industry_defla
+> tor.dta saved
+
+. 
+. 
+. ****************************
+. *****OPEN & APPEND DATA
+. ****************************
+. use "$intdata/NSS_FINAL", clear
+
+. tostring district, replace
+district was float now str2
+
+. append using "$intdata/ASI_Allyears_Clean.dta"
+totalrawmaterials was float now double
+state was str20 now str27
+organization was str47 now str71
+
+. g dataset=survey+string(year)
+
+. decode enttype, g(enttype2)
+
+. replace enttype2="ORG" if survey=="ASI"
+(128857 real changes made)
+
+. drop enttype
+
+. rename enttype enttype
+
+. 
+. 
+. replace  plants=1 if survey=="NSS"
+(497455 real changes made)
+
+. replace location="Non-Household" if survey=="ASI"
+(128857 real changes made)
+
+. 
+. compress
+year was float now int
+registered was float now byte
+age was float now byte
+monthsops was float now byte
+totalemployees_halfpart was float now int
+OTHEEFT was float now int
+OTHEEPT was float now byte
+mos_account was float now byte
+under3yrsold was float now byte
+startyear was float now int
+location was str27 now str13
+
+. 
+. 
+. g state_ORIGINAL=state
+
+. tab state
+
+                      State |      Freq.     Percent        Cum.
+----------------------------+-----------------------------------
+              A & N Islands |      1,526        0.24        0.24
+ANDAMAN AND NICOBAR ISLANDS |         61        0.01        0.25
+             ANDHRA PRADESH |     11,251        1.80        2.05
+                      ASSAM |      2,296        0.37        2.42
+             Andhra Pradesh |     42,646        6.81        9.23
+          Arunachal Pradesh |        582        0.09        9.32
+                      Assam |     13,556        2.16       11.48
+                      BIHAR |      2,396        0.38       11.87
+                      Bihar |     31,122        4.97       16.83
+                 CHANDIGARH |        632        0.10       16.94
+                CHHATISGARH |      1,029        0.16       17.10
+                 Chandigarh |        855        0.14       17.24
+               Chhattisgarh |      3,811        0.61       17.84
+  DADRA  AND  NAGAR  HAVELI |        938        0.15       17.99
+             DAMAN  &  DIU  |      1,108        0.18       18.17
+                      DELHI |      3,806        0.61       18.78
+       Dadra & Nagar Haveli |        563        0.09       18.87
+                Daman & Diu |        524        0.08       18.95
+                      Delhi |      4,730        0.76       19.71
+                        GOA |        912        0.15       19.85
+                    GUJARAT |     12,011        1.92       21.77
+                        Goa |      1,451        0.23       22.00
+                    Gujarat |     20,554        3.28       25.28
+                    HARYANA |      4,812        0.77       26.05
+           HIMACHAL PRADESH |      1,168        0.19       26.24
+                    Haryana |      9,019        1.44       27.68
+           Himachal Pradesh |      7,736        1.24       28.91
+            JAMMU & KASHMIR |        842        0.13       29.05
+                  JHARKHAND |      1,075        0.17       29.22
+            Jammu & Kashmir |      9,800        1.56       30.79
+                  Jharkhand |      7,146        1.14       31.93
+                  KARNATAKA |      7,462        1.19       33.12
+                     KERALA |      5,020        0.80       33.92
+                  Karnataka |     21,313        3.40       37.32
+                     Kerala |     21,076        3.37       40.69
+                Lakshadweep |        177        0.03       40.72
+             MADHYA PRADESH |      4,182        0.67       41.38
+                MAHARASHTRA |     16,012        2.56       43.94
+                    MANIPUR |        146        0.02       43.96
+                  MEGHALAYA |        130        0.02       43.98
+             Madhya Pradesh |     22,637        3.61       47.60
+                 Maharastra |     36,083        5.76       53.36
+                    Manipur |      6,575        1.05       54.41
+                  Meghalaya |      2,438        0.39       54.80
+                    Mizoram |      2,129        0.34       55.14
+                   NAGALAND |        273        0.04       55.18
+                   Nagaland |      3,346        0.53       55.72
+                     ORISSA |      2,246        0.36       56.07
+                     Orissa |     19,079        3.05       59.12
+                PONDICHERRY |        928        0.15       59.27
+                     PUNJAB |      7,116        1.14       60.41
+                 Pondicheri |        982        0.16       60.56
+                     Punjab |     18,517        2.96       63.52
+                  RAJASTHAN |      5,157        0.82       64.34
+                  Rajasthan |     21,038        3.36       67.70
+                     Sikkim |        848        0.14       67.84
+                 TAMIL NADU |     17,790        2.84       70.68
+                    TRIPURA |        583        0.09       70.77
+                 Tamil Nadu |     50,695        8.09       78.86
+                    Tripura |      8,113        1.30       80.16
+              UTTAR PRADESH |     10,524        1.68       81.84
+                UTTARANCHAL |        842        0.13       81.97
+              Uttar Pradesh |     59,773        9.54       91.52
+                Uttaranchal |      2,103        0.34       91.85
+                WEST BENGAL |      6,109        0.98       92.83
+                West Bengal |     44,912        7.17      100.00
+----------------------------+-----------------------------------
+                      Total |    626,312      100.00
+
+. replace state="BIHAR" if state=="Jharkhand" | state=="JHARKHAND"
+(8221 real changes made)
+
+. replace state="MADHYA PRADESH" if state=="CHHATISGARH" | state=="Chhatti
+> sgarh"
+(4840 real changes made)
+
+. replace state="UTTAR PRADESH" if state=="UTTARANCHAL" | state=="Uttaranc
+> hal"
+(2945 real changes made)
+
+. tab state
+
+                      State |      Freq.     Percent        Cum.
+----------------------------+-----------------------------------
+              A & N Islands |      1,526        0.24        0.24
+ANDAMAN AND NICOBAR ISLANDS |         61        0.01        0.25
+             ANDHRA PRADESH |     11,251        1.80        2.05
+                      ASSAM |      2,296        0.37        2.42
+             Andhra Pradesh |     42,646        6.81        9.23
+          Arunachal Pradesh |        582        0.09        9.32
+                      Assam |     13,556        2.16       11.48
+                      BIHAR |     10,617        1.70       13.18
+                      Bihar |     31,122        4.97       18.15
+                 CHANDIGARH |        632        0.10       18.25
+                 Chandigarh |        855        0.14       18.38
+  DADRA  AND  NAGAR  HAVELI |        938        0.15       18.53
+             DAMAN  &  DIU  |      1,108        0.18       18.71
+                      DELHI |      3,806        0.61       19.32
+       Dadra & Nagar Haveli |        563        0.09       19.41
+                Daman & Diu |        524        0.08       19.49
+                      Delhi |      4,730        0.76       20.25
+                        GOA |        912        0.15       20.39
+                    GUJARAT |     12,011        1.92       22.31
+                        Goa |      1,451        0.23       22.54
+                    Gujarat |     20,554        3.28       25.82
+                    HARYANA |      4,812        0.77       26.59
+           HIMACHAL PRADESH |      1,168        0.19       26.78
+                    Haryana |      9,019        1.44       28.22
+           Himachal Pradesh |      7,736        1.24       29.45
+            JAMMU & KASHMIR |        842        0.13       29.59
+            Jammu & Kashmir |      9,800        1.56       31.15
+                  KARNATAKA |      7,462        1.19       32.34
+                     KERALA |      5,020        0.80       33.15
+                  Karnataka |     21,313        3.40       36.55
+                     Kerala |     21,076        3.37       39.91
+                Lakshadweep |        177        0.03       39.94
+             MADHYA PRADESH |      9,022        1.44       41.38
+                MAHARASHTRA |     16,012        2.56       43.94
+                    MANIPUR |        146        0.02       43.96
+                  MEGHALAYA |        130        0.02       43.98
+             Madhya Pradesh |     22,637        3.61       47.60
+                 Maharastra |     36,083        5.76       53.36
+                    Manipur |      6,575        1.05       54.41
+                  Meghalaya |      2,438        0.39       54.80
+                    Mizoram |      2,129        0.34       55.14
+                   NAGALAND |        273        0.04       55.18
+                   Nagaland |      3,346        0.53       55.72
+                     ORISSA |      2,246        0.36       56.07
+                     Orissa |     19,079        3.05       59.12
+                PONDICHERRY |        928        0.15       59.27
+                     PUNJAB |      7,116        1.14       60.41
+                 Pondicheri |        982        0.16       60.56
+                     Punjab |     18,517        2.96       63.52
+                  RAJASTHAN |      5,157        0.82       64.34
+                  Rajasthan |     21,038        3.36       67.70
+                     Sikkim |        848        0.14       67.84
+                 TAMIL NADU |     17,790        2.84       70.68
+                    TRIPURA |        583        0.09       70.77
+                 Tamil Nadu |     50,695        8.09       78.86
+                    Tripura |      8,113        1.30       80.16
+              UTTAR PRADESH |     13,469        2.15       82.31
+              Uttar Pradesh |     59,773        9.54       91.85
+                WEST BENGAL |      6,109        0.98       92.83
+                West Bengal |     44,912        7.17      100.00
+----------------------------+-----------------------------------
+                      Total |    626,312      100.00
+
+. 
+. 
+. ****************************
+. ***Clean States***
+. ****************************
+. replace state=upper(state)
+(484395 real changes made)
+
+. replace state="A & N ISLANDS" if state=="ANDAMAN AND NICOBAR ISLANDS"
+(61 real changes made)
+
+. replace state="CHHATTISGARH" if state=="CHHATISGARH"
+(0 real changes made)
+
+. replace state="DADRA & NAGAR HAVELI" if state=="DADRA  AND  NAGAR  HAVEL
+> I"
+(938 real changes made)
+
+. replace state="DAMAN & DIU" if state=="DAMAN  &  DIU "
+(1108 real changes made)
+
+. replace state="MAHARASHTRA" if state=="MAHARASTRA"
+(36083 real changes made)
+
+. replace state="PONDICHERRY" if state=="PONDICHERI"
+(982 real changes made)
+
+. replace state="UNKNOWN" if state==""
+(0 real changes made)
+
+.         
+. 
+. ****************************
+. ***OUTPUT CLEANUP       ***
+. *note: We replace total value of output with total value of sales where 
+> output value not available or not collected. Negative output values are 
+> recoded as missing.
+. ****************************
+. ***REPLACE totaloutput=totalsales in ASI 1989 & anywhere else not availa
+> ble
+. ***REPLACE totaloutput=totalsales in NSS where not available
+. replace totaloutput=totalsales if dataset=="ASI1989"
+(0 real changes made)
+
+. replace totaloutput=totalsales if survey=="ASI" & totaloutput==. & total
+> sales!=.
+(0 real changes made)
+
+. replace totaloutput=totalsales if survey=="NSS" & totaloutput==. & total
+> sales!=.
+(0 real changes made)
+
+. bysort dataset: count if totaloutput<0
+
+--------------------------------------------------------------------------
+-> dataset = ASI1994
+    0
+--------------------------------------------------------------------------
+-> dataset = ASI2000
+    0
+--------------------------------------------------------------------------
+-> dataset = ASI2005
+    0
+--------------------------------------------------------------------------
+-> dataset = NSS1994
+    0
+--------------------------------------------------------------------------
+-> dataset = NSS2000
+    5
+--------------------------------------------------------------------------
+-> dataset = NSS2005
+   11
+
+. replace totaloutput=. if totaloutput<0
+(16 real changes made, 16 to missing)
+
+. replace totalrawmaterials=totalrawmaterials+totalimports if totalimports
+> !=.
+(14336 real changes made)
+
+. 
+. 
+. 
+. ****************************
+. ***Crosswalk NICs***
+. *note: NIC codes have been updated to the 2004 NIC classification system
+>  at the 3-digit level using crosswalking files provided by CSO.
+. ****************************
+. 
+. 
+. g nic387=""
+(626312 missing values generated)
+
+. g nic498=""
+(626312 missing values generated)
+
+. g nic404=""
+(626312 missing values generated)
+
+. 
+. replace nic387=substr(industrycode,1,3) if year<1998
+nic387 was str1 now str3
+(246017 real changes made)
+
+. replace nic498=substr(industrycode,1,4) if year>=1998&year<2004
+nic498 was str1 now str4
+(253660 real changes made)
+
+. replace nic404=substr(industrycode,1,4) if year>=2004
+nic404 was str1 now str4
+(126635 real changes made)
+
+. 
+. 
+. merge nic387 using "$work/NIC8798Crosswalk.dta", uniqusing sort nokeep
+(note: you are using old merge syntax; see [D] merge for new syntax)
+variable nic387 does not uniquely identify observations in the master data
+nic387 was str3 now str4
+
+. replace nic498 = nic498a if _==3
+(246017 real changes made)
+
+. drop nic498a
+
+. 
+. tab year _merge
+
+           |        _merge
+      year |         1          3 |     Total
+-----------+----------------------+----------
+      1994 |         0    246,017 |   246,017 
+      2000 |   253,660          0 |   253,660 
+      2005 |   126,635          0 |   126,635 
+-----------+----------------------+----------
+     Total |   380,295    246,017 |   626,312 
+
+
+. drop _merge
+
+. 
+. compress
+state was str27 now str20
+nic387 was str4 now str3
+
+. merge nic498 using "$work/NIC9804Crosswalk.dta", uniqusing sort nokeep
+(note: you are using old merge syntax; see [D] merge for new syntax)
+variable nic498 does not uniquely identify observations in the master data
+
+. replace nic404 = nic404a if _==3
+(499565 real changes made)
+
+. drop nic404a
+
+. drop _merge
+
+. 
+. replace nic498="" if nic498=="."
+(110 real changes made)
+
+. replace nic404="" if nic404=="."
+(30 real changes made)
+
+. replace nic404="9999" if nic404=="" & nic387=="" & nic498==""
+(140 real changes made)
+
+. tab dataset if nic304==""
+
+    dataset |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    ASI2000 |          2        0.00        0.00
+    ASI2005 |     43,738       34.51       34.51
+    NSS2000 |        110        0.09       34.60
+    NSS2005 |     82,897       65.40      100.00
+------------+-----------------------------------
+      Total |    126,747      100.00
+
+. replace nic304 =substr(nic404,1,3) if nic304=="" & nic404!=""
+(126745 real changes made)
+
+. tab dataset if nic304==""
+
+    dataset |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    ASI2000 |          2      100.00      100.00
+------------+-----------------------------------
+      Total |          2      100.00
+
+. replace nic304="999" if nic304=="" & nic387=="" & nic498==""
+(0 real changes made)
+
+. replace nic304="999" if nic304==""
+(2 real changes made)
+
+. drop nic387 nic498 industrycode
+
+. 
+. 
+. ****************************
+. ***Replace Unknown 3 digit nics from latest year which are probably reco
+> rding errors***
+. *note: A small number of errant 3-digit NIC codes have been reclassified
+>  as unknown. Errant NIC codes are those which are not listed in the offi
+> cial NIC directory.
+. ****************************
+. replace nic304="999" if nic304=="150"
+(1 real change made)
+
+. replace nic304="999" if nic304=="190"
+(1 real change made)
+
+. replace nic304="999" if nic304=="212"
+(1 real change made)
+
+. replace nic304="999" if nic304=="214"
+(1 real change made)
+
+. replace nic304="999" if nic304=="229"
+(1 real change made)
+
+. replace nic304="999" if nic304=="264"
+(1 real change made)
+
+. replace nic304="999" if nic304=="267"
+(1 real change made)
+
+. replace nic304="999" if nic304=="282"
+(2 real changes made)
+
+. replace nic304="999" if nic304=="310"
+(1 real change made)
+
+. replace nic304="999" if nic304=="452"
+(2 real changes made)
+
+. replace nic304="999" if nic304=="454"
+(1 real change made)
+
+. replace nic304="999" if nic304=="501"
+(1 real change made)
+
+. replace nic304="999" if nic304=="503"
+(2 real changes made)
+
+. replace nic304="999" if nic304=="505"
+(2 real changes made)
+
+. replace nic304="999" if nic304=="523"
+(1 real change made)
+
+. replace nic304="999" if nic304=="552"
+(2 real changes made)
+
+. replace nic304="999" if nic304=="742"
+(1 real change made)
+
+. replace nic304="999" if nic304=="911"
+(1 real change made)
+
+. 
+. 
+. 
+. g nic204=substr(nic304,1,2)
+
+. 
+. 
+. **************** 
+. ****    adjust NSS for changing reference periods
+. *note: We adjust accounts to reflect changed reference periods in recent
+>  NSS surveys by updating all accounts to reflect full year values.
+. ****************
+. ***NSS 1994: collected data for past year; do not adjust
+. 
+. ***NSS 2000: collected data for past month; adjust all flow accounts by 
+> factor of months of operations
+. *note: Even though the documentation say last month collects for all est
+> abs in NSS2000, distributions of output per worker 
+. *and other metrics do not not not indicate this but rather that past yea
+> r was collected. Do not adjust.
+. 
+. ***NSS 2005: collected data for either past month or past year depending
+>  on whether books available; 
+. ***             adjust flow accounts for "last month reported" firm by f
+> actor of months of operations
+. sum monthsops if survey=="NSS" & year==2005, d
+
+           Ops & Bckgrnd - No. of months operated
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            2              1
+ 5%            4              1
+10%            7              1       Obs               82851
+25%           12              1       Sum of Wgt.       82851
+
+50%           12                      Mean           10.89141
+                        Largest       Std. Dev.      2.463033
+75%           12             12
+90%           12             12       Variance        6.06653
+95%           12             12       Skewness      -2.313224
+99%           12             12       Kurtosis       7.362893
+
+. tab monthsops if survey=="NSS" & year==2005, mi
+
+      Ops & |
+  Bckgrnd - |
+     No. of |
+     months |
+   operated |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |        435        0.52        0.52
+          2 |      1,018        1.23        1.75
+          3 |      1,239        1.49        3.25
+          4 |      1,556        1.88        5.12
+          5 |      1,724        2.08        7.20
+          6 |      1,704        2.06        9.26
+          7 |        995        1.20       10.46
+          8 |      2,965        3.58       14.04
+          9 |      1,704        2.06       16.09
+         10 |      3,770        4.55       20.64
+         11 |      1,505        1.82       22.46
+         12 |     64,236       77.49       99.94
+          . |         46        0.06      100.00
+------------+-----------------------------------
+      Total |     82,897      100.00
+
+. tab mos_account if survey=="NSS" & year==2005, mi
+
+mos_account |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     79,220       95.56       95.56
+         12 |      3,662        4.42       99.98
+          . |         15        0.02      100.00
+------------+-----------------------------------
+      Total |     82,897      100.00
+
+. 
+. replace monthsops=12 if monthsops==. & survey=="NSS" & year==2005 
+(46 real changes made)
+
+. foreach i in  totalemployeestotalLcost Totalemployeeswagebill totalrawma
+> terials totalFArent interestamount totaloutput totalsales {
+  2. replace `i' = `i'*monthsops if survey=="NSS" & year==2005 & mos_accou
+> nt==1
+  3. }
+(25796 real changes made)
+(25137 real changes made)
+(77195 real changes made)
+(20906 real changes made)
+(6728 real changes made)
+(78132 real changes made)
+(0 real changes made)
+
+. 
+. 
+. ***********************************************************
+. *Firm's age category:
+. *note: We clean a small number of suspected entry errors in the 'year of
+>  first operations' variable. We topcode a constructed 'age of enterprise
+> ' variable at 99 years.
+. ***********************************************************
+. tab dataset if age==.
+
+    dataset |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    ASI1994 |     53,988       12.42       12.42
+    ASI2000 |     31,131        7.16       19.59
+    ASI2005 |     43,738       10.07       29.65
+    NSS1994 |        258        0.06       29.71
+    NSS2000 |    222,529       51.21       80.92
+    NSS2005 |     82,897       19.08      100.00
+------------+-----------------------------------
+      Total |    434,541      100.00
+
+. 
+. replace startyear=. if startyear>2006
+(13 real changes made, 13 to missing)
+
+. replace startyear=2000+startyear if startyear<=6
+(958 real changes made)
+
+. 
+. tab startyear if startyear<1000
+
+  startyear |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          8 |          1        1.05        1.05
+         12 |         10       10.53       11.58
+         19 |         16       16.84       28.42
+         20 |          1        1.05       29.47
+         25 |          1        1.05       30.53
+         27 |          1        1.05       31.58
+        101 |          1        1.05       32.63
+        104 |         19       20.00       52.63
+        168 |          1        1.05       53.68
+        182 |          1        1.05       54.74
+        184 |          1        1.05       55.79
+        186 |          1        1.05       56.84
+        189 |          1        1.05       57.89
+        191 |          1        1.05       58.95
+        192 |          1        1.05       60.00
+        195 |          1        1.05       61.05
+        196 |          2        2.11       63.16
+        197 |          4        4.21       67.37
+        198 |          5        5.26       72.63
+        199 |          3        3.16       75.79
+        200 |          8        8.42       84.21
+        201 |          2        2.11       86.32
+        204 |          2        2.11       88.42
+        205 |          1        1.05       89.47
+        254 |          1        1.05       90.53
+        613 |          1        1.05       91.58
+        974 |          1        1.05       92.63
+        976 |          2        2.11       94.74
+        978 |          1        1.05       95.79
+        982 |          1        1.05       96.84
+        983 |          1        1.05       97.89
+        994 |          1        1.05       98.95
+        996 |          1        1.05      100.00
+------------+-----------------------------------
+      Total |         95      100.00
+
+. 
+. replace startyear=1968 if startyear==168
+(1 real change made)
+
+. replace startyear=1982 if startyear==182
+(1 real change made)
+
+. replace startyear=1984 if startyear==184
+(1 real change made)
+
+. replace startyear=1986 if startyear==186
+(1 real change made)
+
+. replace startyear=1989 if startyear==189
+(1 real change made)
+
+. replace startyear=1991 if startyear==191
+(1 real change made)
+
+. replace startyear=1992 if startyear==192
+(1 real change made)
+
+. replace startyear=1995 if startyear==195
+(1 real change made)
+
+. replace startyear=1996 if startyear==196
+(2 real changes made)
+
+. replace startyear=1997 if startyear==197
+(4 real changes made)
+
+. replace startyear=1998 if startyear==198
+(5 real changes made)
+
+. replace startyear=1999 if startyear==199
+(3 real changes made)
+
+. replace startyear=2000 if startyear==200
+(8 real changes made)
+
+. replace startyear=2001 if startyear==201
+(2 real changes made)
+
+. replace startyear=2004 if startyear==204
+(2 real changes made)
+
+. replace startyear=2005 if startyear==205
+(1 real change made)
+
+. 
+. 
+. replace startyear=1974 if startyear==974
+(1 real change made)
+
+. replace startyear=1976 if startyear==976
+(2 real changes made)
+
+. replace startyear=1978 if startyear==978
+(1 real change made)
+
+. replace startyear=1982 if startyear==982
+(1 real change made)
+
+. replace startyear=1983 if startyear==983
+(1 real change made)
+
+. replace startyear=1994 if startyear==994
+(1 real change made)
+
+. replace startyear=1996 if startyear==996
+(1 real change made)
+
+. 
+. tab startyear if startyear<1000
+
+  startyear |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          8 |          1        1.92        1.92
+         12 |         10       19.23       21.15
+         19 |         16       30.77       51.92
+         20 |          1        1.92       53.85
+         25 |          1        1.92       55.77
+         27 |          1        1.92       57.69
+        101 |          1        1.92       59.62
+        104 |         19       36.54       96.15
+        254 |          1        1.92       98.08
+        613 |          1        1.92      100.00
+------------+-----------------------------------
+      Total |         52      100.00
+
+. 
+. tab startyear if startyear>year & startyear!=.
+
+  startyear |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       1995 |        109       29.70       29.70
+       1996 |          4        1.09       30.79
+       1998 |          2        0.54       31.34
+       2000 |         17        4.63       35.97
+       2001 |          2        0.54       36.51
+       2003 |          1        0.27       36.78
+       2004 |          2        0.54       37.33
+       2005 |          1        0.27       37.60
+       2006 |        229       62.40      100.00
+------------+-----------------------------------
+      Total |        367      100.00
+
+. replace startyear = year if startyear-1==year
+(339 real changes made)
+
+. replace startyear =. if startyear>year & startyear!=.
+(28 real changes made, 28 to missing)
+
+. 
+. replace startyear=. if startyear<1000
+(52 real changes made, 52 to missing)
+
+. 
+. replace age=year-startyear if age==.
+age was byte now int
+(128580 real changes made)
+
+. replace age=0 if age<0
+(0 real changes made)
+
+. replace age=99 if age>99 & age!=.
+(779 real changes made)
+
+. sum age, d
+
+                             age
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            1              0
+10%            2              0       Obs              320351
+25%            5              0       Sum of Wgt.      320351
+
+50%           10                      Mean           18.55211
+                        Largest       Std. Dev.      23.56998
+75%           21             99
+90%           40             99       Variance       555.5441
+95%           99             99       Skewness       2.402005
+99%           99             99       Kurtosis       8.344886
+
+. 
+. replace under3=1 if (age<=3 & survey=="ASI") | (age<=3 & survey=="NSS" &
+> (year==1989|year==1994))
+(61196 real changes made)
+
+. replace under3=0 if under3==.
+(106701 real changes made)
+
+. 
+. tab dataset under3
+
+           |     under3yrsold
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    45,264      8,724 |    53,988 
+   ASI2000 |    26,198      4,933 |    31,131 
+   ASI2005 |    35,239      8,499 |    43,738 
+   NSS1994 |   152,989     39,040 |   192,029 
+   NSS2000 |   199,890     22,639 |   222,529 
+   NSS2005 |    72,728     10,169 |    82,897 
+-----------+----------------------+----------
+     Total |   532,308     94,004 |   626,312 
+
+
+. 
+. destring year, replace
+year already numeric; no replace
+
+. 
+. 
+. ****************************
+. ***Change Currency Accounts from LCU to 2005 Const USD***
+. *note: We deflate the current rupee values using wholesale price indices
+>  of manufacturing industries used by Gupta, Hasan, and Kumar (2009), and
+>  convert to 2005 international $USD at purchasing-power parity.
+. ****************************
+. ***reassign a few industries to ensure match
+. g nic304_orig=nic304
+
+.         replace nic304="241" if nic304=="242"
+(14187 real changes made)
+
+.         replace nic304="241" if nic304=="243"
+(120 real changes made)
+
+.         replace nic304="272" if nic304=="273"
+(2504 real changes made)
+
+.         replace nic304="293" if nic304=="291"
+(6415 real changes made)
+
+.         replace nic304="293" if nic304=="292"
+(11665 real changes made)
+
+.         replace nic304="311" if nic304=="312"
+(951 real changes made)
+
+.         replace nic304="314" if nic304=="315"
+(781 real changes made)
+
+.         replace nic304="322" if nic304=="323"
+(680 real changes made)
+
+.         replace nic304="341" if nic304=="342"
+(588 real changes made)
+
+.         replace nic304="341" if nic304=="343"
+(2126 real changes made)
+
+. 
+. merge m:1 nic304 year using "$work/industry_deflator"
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                        40,394
+        from master                    38,774  (_merge==1)
+        from using                      1,620  (_merge==2)
+
+    matched                           587,538  (_merge==3)
+    -----------------------------------------
+
+.         drop if _m==2
+(1620 observations deleted)
+
+.         tab nic304 year if _m==1
+
+           |               year
+    nic304 |      1994       2000       2005 |     Total
+-----------+---------------------------------+----------
+       014 |     1,328        774        743 |     2,845 
+       142 |         0         12         61 |        73 
+       371 |         0        292         37 |       329 
+       372 |         0        125         61 |       186 
+       401 |       182         21         71 |       274 
+       402 |        79         53         53 |       185 
+       403 |         0          0          2 |         2 
+       410 |       203         19         24 |       246 
+       502 |     8,000        487        781 |     9,268 
+       504 |         0         10        151 |       161 
+       526 |    23,228         49         37 |    23,314 
+       630 |       433        204        352 |       989 
+       725 |        27          0          8 |        35 
+       749 |         0          3         35 |        38 
+       900 |        73          4         30 |       107 
+       921 |        46         32         33 |       111 
+       930 |        98         57         56 |       211 
+       999 |       235        112         53 |       400 
+-----------+---------------------------------+----------
+     Total |    33,932      2,254      2,588 |    38,774 
+
+
+.         destring nic304, replace
+nic304 has all characters numeric; replaced as int
+
+.         assert (nic304<150 | nic304>369) if _m==1
+
+.         tostring nic304, replace
+nic304 was int now str3
+
+.         drop _m
+
+.         
+. replace nic304=nic304_orig
+(42862 real changes made)
+
+. 
+. scalar ppp_adjustor=14.66854168 /*FROM WDI, series "PPP conversion facto
+> r, GDP (LCU per international $)" for INDIA 2005 */
+
+. foreach i of varlist  totalfixedassets loanamount traditional_loan total
+> employeestotalLcost Totalemployeeswagebill valueofelectricitysold valuee
+> lectricitypurchased totalrawmaterials totalFArent interestamount totalou
+> tput totalsales closingnetland closingnetbuilding {
+  2. g `i'_LCU=`i'
+  3. replace `i' = `i'/wpi_deflator
+  4. replace `i'=`i'/ppp_adjustor
+  5. }
+(6135 missing values generated)
+(489504 real changes made, 38400 to missing)
+(573772 real changes made)
+(460812 missing values generated)
+(107360 real changes made, 9300 to missing)
+(141512 real changes made)
+(128857 missing values generated)
+(53369 real changes made, 30852 to missing)
+(29474 real changes made)
+(56891 missing values generated)
+(232540 real changes made, 38477 to missing)
+(264609 real changes made)
+(3770 missing values generated)
+(231543 real changes made, 38565 to missing)
+(262860 real changes made)
+(510619 missing values generated)
+(7724 real changes made, 7489 to missing)
+(526 real changes made)
+(554463 missing values generated)
+(32240 real changes made, 3829 to missing)
+(68002 real changes made)
+(5736 missing values generated)
+(491252 real changes made, 38385 to missing)
+(575086 real changes made)
+(205377 missing values generated)
+(142698 real changes made, 26258 to missing)
+(144768 real changes made)
+(253221 missing values generated)
+(102100 real changes made, 10318 to missing)
+(133368 real changes made)
+(23149 missing values generated)
+(483836 real changes made, 32890 to missing)
+(568436 real changes made)
+(371797 missing values generated)
+(217947 real changes made, 31776 to missing)
+(221791 real changes made)
+(547415 missing values generated)
+(52693 real changes made, 4315 to missing)
+(74163 real changes made)
+(522934 missing values generated)
+(69427 real changes made, 6241 to missing)
+(96721 real changes made)
+
+. 
+. drop wpi_deflator
+
+. 
+. 
+. 
+. ****************************
+. ***Order Vars
+. ****************************
+. 
+. 
+. #delim ;
+delimiter now ;
+. order 
+> 
+> uniqid
+> survey
+> dataset
+> year
+> state
+> district
+> ruralurban
+> registered
+> organization
+> ownership
+> enttype 
+> organization
+> startyear
+> age
+> nic404
+> nic304
+> under3yrsold 
+> monthsops
+> multiplier
+> 
+> plants
+> totalfixedassets
+> closingnetland
+> closingnetbuilding
+> loanamount
+> traditional_loan
+> totalemployees
+> totalemployees_halfpart
+> Memployees
+> Femployees
+> totalemployeestotalLcost
+> Totalemployeeswagebill
+> 
+> totalrawmaterials
+> totalFArent
+> interestamount
+> totaloutput
+> totalsales
+> totalimports
+> fixedcapitalformation
+> totalfixedassets_LCU
+> closingnetland_LCU
+> closingnetbuilding_LCU
+> loanamount_LCU
+> totalemployeestotalLcost_LCU
+> Totalemployeeswagebill_LCU
+> totalrawmaterials_LCU
+> totalFArent_LCU
+> interestamount_LCU
+> totaloutput_LCU
+> totalsales_LCU
+> ;
+
+. #delim cr
+delimiter now cr
+. compress
+age was int now byte
+
+. 
+. 
+. ****************
+. ***     INSPECT AND CREATE FLAGS TO CLEAN DATA OF OUTLIERS & OTHER PECUL
+> IARITIES
+. *note: We inspect the data in an intensive manner to identify outliers a
+> nd other idiosyncrasies that would affect summary statistics or economet
+> ric estimations.
+. ****************
+. ***NOTE: ALL ACCOUNTS HAVE ALREADY BEEN MADE ANNUAL
+. ****************
+. ***     Calculate Yearly LOGW per WORKER
+. ****************
+. g W_per_worker=Totalemployeeswagebill/totalemployees
+(44328 missing values generated)
+
+.         g logW=log(W_per_worker)
+(365385 missing values generated)
+
+. g monthly_wage_per_worker=W_per_worker
+(44328 missing values generated)
+
+. replace monthly_wage_per_worker=W_per_worker/12
+(260927 real changes made)
+
+. 
+. g Y_per_worker=totaloutput/totalemployees
+(61197 missing values generated)
+
+. g monthly_Y_per_worker=Y_per_worker
+(61197 missing values generated)
+
+. replace monthly_Y_per_worker=Y_per_worker/12
+(563289 real changes made)
+
+. 
+.         g logY_per_EE=log(Y_per_worker)
+(63023 missing values generated)
+
+. 
+. 
+. ****************
+. ***     CLEAN OUTLIERS
+. ****************
+. ***Investigate cause of high output per worker means in ASI 1989
+. ****************
+. 
+. tabstat Y_per_worker, by (dataset) stat (mean p50 sd)
+
+Summary for variables: Y_per_worker
+     by categories of: dataset 
+
+dataset |      mean       p50        sd
+--------+------------------------------
+ASI1994 |  59056.65  25083.63    253808
+ASI2000 |  84661.39  35456.36  463657.2
+ASI2005 |  103951.3  43954.49  314223.3
+NSS1994 |  2395.988   897.785  8531.525
+NSS2000 |  4521.484   1798.82  14939.25
+NSS2005 |  9894.454  1963.385     65066
+--------+------------------------------
+  Total |  18778.28  2001.652  150337.4
+---------------------------------------
+
+. ***NOTICE V HIGH MEAN IN ASI 1989
+. 
+. sum Y_per_worker if year==1989 & survey=="ASI", d
+
+                        Y_per_worker
+-------------------------------------------------------------
+no observations
+
+. tab dataset 
+
+    dataset |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    ASI1994 |     53,988        8.62        8.62
+    ASI2000 |     31,131        4.97       13.59
+    ASI2005 |     43,738        6.98       20.57
+    NSS1994 |    192,029       30.66       51.23
+    NSS2000 |    222,529       35.53       86.76
+    NSS2005 |     82,897       13.24      100.00
+------------+-----------------------------------
+      Total |    626,312      100.00
+
+. tab dataset if Y_per_worker>1000000&Y_per_worker!=.
+
+    dataset |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    ASI1994 |        116       17.96       17.96
+    ASI2000 |        160       24.77       42.72
+    ASI2005 |        320       49.54       92.26
+    NSS1994 |          1        0.15       92.41
+    NSS2000 |          4        0.62       93.03
+    NSS2005 |         45        6.97      100.00
+------------+-----------------------------------
+      Total |        646      100.00
+
+. 
+. g output_per_worker_flag= Y_per_worker>1000000 & Y_per_worker!=.
+
+. tab dataset output_per_worker_flag, mi
+
+           | output_per_worker_fla
+           |           g
+   dataset |         0          1 |     Total
+-----------+----------------------+----------
+   ASI1994 |    53,872        116 |    53,988 
+   ASI2000 |    30,971        160 |    31,131 
+   ASI2005 |    43,418        320 |    43,738 
+   NSS1994 |   192,028          1 |   192,029 
+   NSS2000 |   222,525          4 |   222,529 
+   NSS2005 |    82,852         45 |    82,897 
+-----------+----------------------+----------
+     Total |   625,666        646 |   626,312 
+
+
+. ***recheck effect of dropping outliers on means
+. tabstat Y_per_worker if output_per_worker_flag==0, by (dataset) stat (me
+> an p50 sd)
+
+Summary for variables: Y_per_worker
+     by categories of: dataset 
+
+dataset |      mean       p50        sd
+--------+------------------------------
+ASI1994 |   52247.4  24991.93  84621.44
+ASI2000 |  70094.96  35149.65  104718.9
+ASI2005 |  85960.87   43370.4  123263.3
+NSS1994 |  2389.251   897.785  8103.318
+NSS2000 |  4501.287   1798.82  14150.17
+NSS2005 |  8835.877  1963.385  38634.69
+--------+------------------------------
+  Total |  16237.18  1995.852  54354.37
+---------------------------------------
+
+. sum Y_per_worker if year==1989 & survey=="ASI" & output_per_worker_flag=
+> =0, d
+
+                        Y_per_worker
+-------------------------------------------------------------
+no observations
+
+. ***LOOKS FIXED TO ME***
+. 
+. *note: This inspection results in a data flag, 'output_per_worker_flag' 
+> which captures any firms with >1MM output per worker in 2005 USD @ PPP. 
+> This is a reasonable indication of eporting or recording error in the es
+> tablishment level observations.
+. 
+. 
+. ****************************
+. ***CREATE ADDITIONAL OUTLIER AND DROP FLAGS
+. *note: We create a number of additional flags indicating various outlier
+> s or other issues which may affect summary stats or econometrics.
+. ****************************
+. 
+. ****************************
+. ***DROP KNOWN OUTLIERS***
+. *note: We flag 1 observation which is an obvious outlier in total employ
+> ment by 'emp_outlier_flag'. 
+. *note: We drop 8 observations with unrecorded state codes in 1989.
+. ****************************
+. g NSS_toobig_flag =survey=="NSS" & totalemployees>20 & totalemployees!=.
+
+. g emp_outlier_flag =uniqid=="000233131702317"
+
+. drop if state=="UNKNOWN"
+(0 observations deleted)
+
+. 
+. 
+. 
+. ****************************
+. ***FLAG  potential service industries given nic description***
+. *note: NIC codes which indicates service industries (coverred in NSS sur
+> vey sample) have been identified and flagged by the 'services_flag' vari
+> able. Note that the deflated/converted accounts for these observations w
+> ill be null as deflators were unavailable.
+. ****************************
+. g services_flag=0
+
+. replace services_flag=1 if nic304=="371"
+(329 real changes made)
+
+. replace services_flag=1 if nic304=="372"
+(186 real changes made)
+
+. replace services_flag=1 if nic304=="401"
+(274 real changes made)
+
+. replace services_flag=1 if nic304=="402"
+(185 real changes made)
+
+. replace services_flag=1 if nic304=="403"
+(2 real changes made)
+
+. replace services_flag=1 if nic304=="410"
+(246 real changes made)
+
+. replace services_flag=1 if nic304=="502"
+(9268 real changes made)
+
+. replace services_flag=1 if nic304=="504"
+(161 real changes made)
+
+. replace services_flag=1 if nic304=="526"
+(23314 real changes made)
+
+. replace services_flag=1 if nic304=="630"
+(989 real changes made)
+
+. replace services_flag=1 if nic304=="725"
+(35 real changes made)
+
+. replace services_flag=1 if nic304=="749"
+(38 real changes made)
+
+. replace services_flag=1 if nic304=="900"
+(107 real changes made)
+
+. replace services_flag=1 if nic304=="921"
+(111 real changes made)
+
+. replace services_flag=1 if nic304=="930"
+(211 real changes made)
+
+. replace services_flag=1 if nic304=="999"
+(400 real changes made)
+
+. replace services_flag=1 if nic304=="014"
+(2845 real changes made)
+
+. replace services_flag=1 if nic304=="142"
+(73 real changes made)
+
+. 
+. 
+. ****************************
+. ***Clean out states***
+. *note: We flag Arunachal Pradesh, Mizoram, Sikkim and Union Territory of
+>  Lakshadweep with 'state_sample_flag' as these states are covered only i
+> n the NSS sample. 
+. ****************************
+. 
+. tab state, mi
+
+               State |      Freq.     Percent        Cum.
+---------------------+-----------------------------------
+       A & N ISLANDS |      1,587        0.25        0.25
+      ANDHRA PRADESH |     53,897        8.61        8.86
+   ARUNACHAL PRADESH |        582        0.09        8.95
+               ASSAM |     15,852        2.53       11.48
+               BIHAR |     41,739        6.66       18.15
+          CHANDIGARH |      1,487        0.24       18.38
+DADRA & NAGAR HAVELI |      1,501        0.24       18.62
+         DAMAN & DIU |      1,632        0.26       18.88
+               DELHI |      8,536        1.36       20.25
+                 GOA |      2,363        0.38       20.62
+             GUJARAT |     32,565        5.20       25.82
+             HARYANA |     13,831        2.21       28.03
+    HIMACHAL PRADESH |      8,904        1.42       29.45
+     JAMMU & KASHMIR |     10,642        1.70       31.15
+           KARNATAKA |     28,775        4.59       35.75
+              KERALA |     26,096        4.17       39.91
+         LAKSHADWEEP |        177        0.03       39.94
+      MADHYA PRADESH |     31,659        5.05       45.00
+         MAHARASHTRA |     52,095        8.32       53.32
+             MANIPUR |      6,721        1.07       54.39
+           MEGHALAYA |      2,568        0.41       54.80
+             MIZORAM |      2,129        0.34       55.14
+            NAGALAND |      3,619        0.58       55.72
+              ORISSA |     21,325        3.40       59.12
+         PONDICHERRY |      1,910        0.30       59.43
+              PUNJAB |     25,633        4.09       63.52
+           RAJASTHAN |     26,195        4.18       67.70
+              SIKKIM |        848        0.14       67.84
+          TAMIL NADU |     68,485       10.93       78.77
+             TRIPURA |      8,696        1.39       80.16
+       UTTAR PRADESH |     73,242       11.69       91.85
+         WEST BENGAL |     51,021        8.15      100.00
+---------------------+-----------------------------------
+               Total |    626,312      100.00
+
+. 
+. g state_sample_flag=0
+
+. replace state_sample_flag=1 if state=="ARUNACHAL PRADESH"
+(582 real changes made)
+
+. replace state_sample_flag=1 if state=="LAKSHADWEEP"
+(177 real changes made)
+
+. replace state_sample_flag=1 if state=="MIZORAM"
+(2129 real changes made)
+
+. replace state_sample_flag=1 if state=="SIKKIM"
+(848 real changes made)
+
+. replace state_sample_flag=1 if state=="UNKNOWN"
+(0 real changes made)
+
+. 
+. 
+. 
+. **************
+. ********        Flag other stuff
+. *note: We flag other observations with null, zero or negative values in 
+> production function accounts.
+. **************
+. 
+. foreach i in totalemployees totaloutput totalrawmaterials totalfixedasse
+> ts {
+  2. g null_`i'_flag=`i'==. 
+  3. g no_`i'_flag=`i'==0
+  4. g neg_`i'_flag=`i'<0
+  5. }
+
+.         
+. 
+. **************
+. ********        Flag other stuff
+. *note: We flag a observations that are outliers in total output (GT 1 tr
+> illion 2005 USD @PPP) by 'high_output_flag'.
+. **************
+. count if totaloutput>1000000000 & totaloutput!=.
+  151
+
+. tab dataset if totaloutput>1000000000 & totaloutput!=.
+
+    dataset |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    ASI1994 |         25       16.56       16.56
+    ASI2000 |         47       31.13       47.68
+    ASI2005 |         79       52.32      100.00
+------------+-----------------------------------
+      Total |        151      100.00
+
+. sum totaloutput, d
+
+              Gross Value Add - Total Receipts
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     71.59066              0
+ 5%     270.6065              0
+10%     484.7909              0       Obs              570273
+25%     1237.058              0       Sum of Wgt.      570273
+
+50%     3922.225                      Mean            3239161
+                        Largest       Std. Dev.      1.03e+08
+75%     31594.68       1.58e+10
+90%     963170.8       1.61e+10       Variance       1.07e+16
+95%      4920722       1.63e+10       Skewness       226.3902
+99%     4.87e+07       4.75e+10       Kurtosis       84451.16
+
+. g high_output_flag=totaloutput>1000000000
+
+. sum totaloutput if high_output_flag==0, d
+
+              Gross Value Add - Total Receipts
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     71.59066              0
+ 5%     270.3419              0
+10%     484.6593              0       Obs              570122
+25%     1237.058              0       Sum of Wgt.      570122
+
+50%     3922.225                      Mean            2201915
+                        Largest       Std. Dev.      1.99e+07
+75%     31481.66       9.81e+08
+90%     957000.8       9.88e+08       Variance       3.95e+14
+95%      4873065       9.91e+08       Skewness       22.78839
+99%     4.74e+07       9.91e+08       Kurtosis       720.1284
+
+. 
+. 
+. 
+. 
+. egen totalunpaidemp=rowtotal(OTHEEFT OTHEEPT TOTOTHEE)
+
+. drop OTHEEFT OTHEEPT TOTOTHEE
+
+. ****************************
+. ***Save Master Dataset
+. ****************************
+. compress
+output_per_worker_flag was float now byte
+NSS_toobig_flag was float now byte
+emp_outlier_flag was float now byte
+services_flag was float now byte
+state_sample_flag was float now byte
+null_totalemployees_flag was float now byte
+no_totalemployees_flag was float now byte
+neg_totalemployees_flag was float now byte
+null_totaloutput_flag was float now byte
+no_totaloutput_flag was float now byte
+neg_totaloutput_flag was float now byte
+null_totalrawmaterials_flag was float now byte
+no_totalrawmaterials_flag was float now byte
+neg_totalrawmaterials_flag was float now byte
+null_totalfixedassets_flag was float now byte
+no_totalfixedassets_flag was float now byte
+neg_totalfixedassets_flag was float now byte
+high_output_flag was float now byte
+
+. 
+. 
+. save "$intdata/ASINSS_AppendedMaster_CleanFlagged.dta", replace
+(note: file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASIN
+> SS_AppendedMaster_CleanFlagged.dta not found)
+file C:/OpenCode/GKO_Reservations_JDE2014_ReplBackup/5intdata//ASINSS_Appe
+> ndedMaster_CleanFlagged.dta saved
+
+. 
+. erase "$intdata/ASI_Allyears_Clean.dta"
+
+. erase "$intdata/NSS_FINAL.dta"
+
+. 
+. 
+end of do-file
