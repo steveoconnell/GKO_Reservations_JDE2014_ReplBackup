@@ -1,5 +1,5 @@
 ####Ghani - Kerr - O'Connell
-####Political Reservations and Women's Entrepreneuship in India
+####Political Reservations and Women's Entrepreneurship in India
 ####Journal of Development Economics, 2014
 ####Replication Backup
 
